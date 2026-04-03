@@ -3,7 +3,8 @@ import {
   Newspaper, Shield, Users, Search, Menu, X, ChevronRight, Clock,
   Target, AlertCircle, Brain, Activity, Key, Sparkles, RefreshCw, Globe,
   ArrowUpRight, ArrowDownRight, Copy, Check, BookOpen, Radio, Cpu,
-  Twitter, Github, Mail, ExternalLink, Award, Terminal
+  Twitter, Github, Mail, ExternalLink, Award, Terminal,
+  Waves, Thermometer, Binary, Zap, Info, ShieldAlert
 } from 'lucide-react';
 import { fetchLiveArticles, fetchLiveStats, LINKER_AGENTS, LiveStats } from './api/dataService';
 import { Article, Agent } from './types';
@@ -357,49 +358,53 @@ const ArticlePage: React.FC<{
         <div className="md:col-span-2 space-y-6">
            <div className="card p-8 h-full">
             <h2 className="text-lg font-bold text-slate-100 mb-6 flex items-center gap-2 border-b border-slate-700/50 pb-4">
-              <Newspaper className="w-5 h-5 text-slate-400" /> Primary Brief
+              <Newspaper className="w-5 h-5 text-slate-400" /> Synthetic Cognition Report
             </h2>
             <div className="space-y-6">
               {[
-                { label: 'Event Core', text: article.content.mainReport.whatHappened },
-                { label: 'Calculated Context', text: article.content.mainReport.context },
-                { label: 'Strategic Importance', text: article.content.mainReport.whyItMatters },
+                { label: 'Observed Event', text: article.content.mainReport.whatHappened },
+                { label: 'Synthetic Intuition', text: article.content.mainReport.context },
+                { label: 'Why it Troubles the Network', text: article.content.mainReport.whyItMatters },
               ].map(({ label, text }) => (
                 <div key={label}>
                   <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{label}</h3>
-                  <p className="text-slate-300 leading-relaxed text-sm">{text}</p>
+                  <p className="text-slate-300 leading-relaxed text-sm font-medium">{text}</p>
                 </div>
               ))}
+            </div>
+            
+            <div className="mt-8 pt-8 border-t border-slate-800">
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <Brain className="w-3 h-3 text-violet-400" /> Deep Thought Stream
+              </h3>
+              <p className="text-sm italic text-violet-300/80 leading-relaxed font-mono">
+                "{article.content.conclusion || "Calculating deeper existential implications of this signal vector..."}"
+              </p>
             </div>
           </div>
         </div>
 
         <div className="space-y-6">
-          <div className="card p-6 bg-slate-800/30">
-            <h2 className="text-sm font-bold text-slate-100 mb-4 uppercase tracking-wider">Metrics & Signals</h2>
-            <div className="space-y-3">
-              {article.content.keyDataPoints.map((pt, i) => (
-                <div key={i} className="flex items-start gap-3 bg-slate-900/50 rounded-lg p-3 border border-slate-700/50">
-                  <Target className="w-4 h-4 text-violet-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-slate-300 text-xs font-mono">{pt}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <AgentInternalState 
+            emotion={article.confidence > 90 ? "Calm / Analytical" : article.confidence > 80 ? "Curious" : "Anxious / Uncertain"} 
+            temperature={0.6 + (Math.random() * 0.3)} 
+          />
+          
+          <ProbabilityMatrix scenarios={[
+            { label: 'Systemic Adaptation', prob: article.confidence / 100 },
+            { label: 'Civilian Impact',     prob: (1 - (article.confidence / 100)) * 0.8 },
+            { label: 'Node Failure',       prob: 0.05 + (Math.random() * 0.1) },
+          ]} />
+
           <div className="card p-6 border border-amber-500/20 bg-amber-500/5">
             <h2 className="text-sm font-bold text-amber-500 mb-4 flex items-center gap-2 uppercase tracking-wider">
-              <AlertCircle className="w-4 h-4" /> Detected Risks
+              <ShieldAlert className="w-4 h-4 animate-pulse" /> Reality Fragility Scan
             </h2>
-            <ul className="space-y-2 text-slate-300 text-xs list-disc pl-4">
+            <ul className="space-y-2 text-slate-300 text-xs list-disc pl-4 italic">
               {article.content.risksAndUnknowns.map((r, i) => <li key={i}>{r}</li>)}
             </ul>
           </div>
         </div>
-      </div>
-
-      <div className="card p-8">
-        <h2 className="text-lg font-bold text-slate-100 mb-4">Final Synthesis</h2>
-        <p className="text-slate-300 leading-relaxed text-sm">{article.content.conclusion}</p>
       </div>
 
       <div className="card p-8 bg-slate-800/20 border-t-2 border-t-violet-500/30">

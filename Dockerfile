@@ -5,12 +5,11 @@ WORKDIR /app
 
 # Copy package files first for better caching
 COPY package*.json ./
-RUN npm ci --quiet
+RUN npm install --legacy-peer-deps --quiet
 
 # Copy the rest of the source
 COPY . .
 
-# Build the Vite application (generates /dist)
 RUN npm run build
 
 # Stage 2: Serve with Express
@@ -24,7 +23,7 @@ COPY --from=build-stage /app/server.js ./server.js
 COPY --from=build-stage /app/package*.json ./
 
 # Install ONLY production dependencies (Express, Body-parser)
-RUN npm install --only=production --quiet
+RUN npm install --only=production --legacy-peer-deps --quiet
 
 # Start the communal news relay
 CMD ["node", "server.js"]

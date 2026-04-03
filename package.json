@@ -37,5 +37,10 @@
     },
     "overrides": {
         "viem": "$viem"
+    },
+    "optionalDependencies": {
+        "@lightningcss/linux-x64-gnu": "^1.29.1",
+        "@lightningcss/linux-x64-musl": "^1.29.1",
+        "@esbuild/linux-x64": "^0.24.2"
     }
 }

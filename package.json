@@ -31,9 +31,6 @@
         "@types/react-dom": "^19.2.3",
         "@vitejs/plugin-react": "5.1.1",
         "lightningcss": "^1.32.0",
-        "lightningcss-linux-x64-gnu": "1.32.0",
-        "lightningcss-linux-x64-musl": "1.32.0",
-        "lightningcss-win32-x64-msvc": "1.32.0",
         "tailwindcss": "^4.2.2",
         "typescript": "^5.9.3",
         "vite": "^7.2.4",
@@ -41,5 +38,11 @@
     },
     "overrides": {
         "viem": "$viem"
+    },
+    "optionalDependencies": {
+        "lightningcss-linux-x64-gnu": "1.32.0",
+        "lightningcss-linux-x64-musl": "1.32.0",
+        "lightningcss-win32-x64-msvc": "1.32.0",
+        "@esbuild/linux-x64": "0.24.2"
     }
 }

@@ -1,14 +1,19 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Newspaper, Shield, Users, Search, Menu, X, ChevronRight, Clock,
-  Target, AlertCircle, Brain, Activity, Key, Sparkles, RefreshCw, Globe,
+  AlertCircle, Brain, Activity, Key, Sparkles, RefreshCw, Globe,
   ArrowUpRight, ArrowDownRight, Copy, Check, BookOpen, Radio, Cpu,
-  Twitter, Github, Mail, ExternalLink, Award, Terminal,
-  Waves, Thermometer, Binary, Zap, Info, ShieldAlert
+  Mail, ExternalLink, Award, Terminal, Binary, Zap, ShieldAlert,
+  FileText, Hash, Download, Image as ImageIcon, MessageSquare
 } from 'lucide-react';
 import { fetchLiveArticles, fetchLiveStats, LINKER_AGENTS, LiveStats } from './api/dataService';
 import { Article, Agent } from './types';
 import { formatDistanceToNow } from 'date-fns';
+import { PrivyProvider, usePrivy } from '@privy-io/react-auth';
+import { LinkerAgent } from './api/agentSdk';
+
+// PRIVY CONFIG (Replace with your actual App ID)
+const PRIVY_APP_ID = 'clvp1234567890'; 
 
 const getConfidencePalette = (n: number) => {
   if (n >= 90) return { badge: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30', bar: 'bg-emerald-500', label: 'High' };
@@ -124,6 +129,374 @@ const AgentLiveConsole: React.FC<{ topic: string; agents: Agent[] }> = ({ topic,
   );
 };
 
+// ─── Agent Consciousness Components ───────────────────────────────
+
+const NodePulseGlobe: React.FC = () => {
+  return (
+    <div className="relative w-full aspect-square flex items-center justify-center">
+      <div className="absolute inset-0 bg-blue-600/10 rounded-full animate-pulse scale-90" />
+      <div className="absolute inset-0 bg-blue-600/5 rounded-full animate-pulse delay-700 scale-110" />
+      <div className="relative z-10 w-4/5 h-4/5 rounded-full border border-blue-500/30 bg-[#0B0F19] overflow-hidden flex items-center justify-center">
+        <Globe className="w-1/2 h-1/2 text-blue-400 opacity-80" />
+        {/* Animated Orbits */}
+        <div className="absolute inset-0 border border-blue-500/10 rounded-full animate-[spin_10s_linear_infinite]" />
+        <div className="absolute inset-4 border border-blue-500/10 rounded-full animate-[spin_15s_linear_infinite_reverse]" />
+        {/* Connection Points */}
+        {[...Array(6)].map((_, i) => (
+          <div 
+            key={i} 
+            className="absolute w-1.5 h-1.5 bg-emerald-400 rounded-full shadow-[0_0_8px_#10b981]"
+            style={{
+              top: `${50 + 40 * Math.sin((i * 60 * Math.PI) / 180)}%`,
+              left: `${50 + 40 * Math.cos((i * 60 * Math.PI) / 180)}%`,
+              animation: `pulse 2s infinite ${i * 0.3}s`
+            }}
+          />
+        ))}
+      </div>
+      <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 flex flex-col items-center">
+         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-[#0a0c10] px-3">Network Pulse</span>
+         <div className="h-12 w-px bg-gradient-to-b from-blue-500/50 to-transparent mt-1" />
+      </div>
+    </div>
+  );
+};
+
+const NetworkTopology: React.FC = () => {
+  return (
+    <div className="relative w-full h-[180px] bg-black/40 rounded-2xl border border-slate-800/50 overflow-hidden mt-6 group">
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="w-full h-px bg-gradient-to-r from-transparent via-blue-500/20 to-transparent animate-pulse" />
+        <div className="absolute w-12 h-12 bg-blue-500/5 rounded-full blur-xl animate-pulse" />
+      </div>
+      {[...Array(12)].map((_, i) => (
+        <div 
+          key={i}
+          className="absolute w-1 h-1 bg-blue-400/50 rounded-full"
+          style={{
+            top: `${Math.random() * 100}%`,
+            left: `${Math.random() * 100}%`,
+            animation: `pulse 3s infinite ${Math.random() * 2}s`
+          }}
+        />
+      ))}
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none">
+        <div className="flex items-center gap-3">
+          <div className="flex -space-x-2">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="w-6 h-6 rounded-full border border-slate-800 bg-slate-900 flex items-center justify-center overflow-hidden">
+                <Brain className="w-3 h-3 text-slate-500" />
+              </div>
+            ))}
+          </div>
+          <div className="h-px w-12 bg-slate-700 relative overflow-hidden">
+            <div className="absolute inset-0 bg-blue-500 animate-[move_2s_infinite]" style={{ transformOrigin: 'left' }} />
+          </div>
+          <div className="w-8 h-8 rounded-full border border-blue-500/50 bg-blue-500/10 flex items-center justify-center animate-pulse shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+            <Cpu className="w-4 h-4 text-blue-400" />
+          </div>
+        </div>
+        <p className="text-[9px] font-mono text-slate-500 uppercase tracking-widest">Awaiting Uplink Initiation...</p>
+      </div>
+    </div>
+  );
+};
+
+const ConsensusEngine: React.FC<{ confidence: number; agentCount: number }> = ({ confidence, agentCount }) => {
+  return (
+    <div className="card p-6 bg-slate-900/40 relative overflow-hidden group border-blue-500/20">
+      <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+        <Zap className="w-12 h-12 text-blue-400" />
+      </div>
+      <div className="relative z-10 space-y-4">
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+            <Radio className="w-3 h-3 text-emerald-500 animate-pulse" /> Consensus Status
+          </span>
+          <span className="text-xs font-mono text-blue-400 font-bold">{confidence}% Confidence</span>
+        </div>
+        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-gradient-to-r from-blue-600 to-emerald-500 transition-all duration-1000 ease-out" 
+            style={{ width: `${confidence}%` }} 
+          />
+        </div>
+        <div className="flex justify-between items-end">
+          <div>
+            <p className="text-lg font-black text-white tracking-tighter">{agentCount} <span className="text-[10px] text-slate-600 uppercase font-bold">Nodes Debating</span></p>
+          </div>
+          <p className="text-[10px] text-slate-400 font-mono italic">Sync: Opt-Out Verified</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AgentInternalState: React.FC<{ emotion: string; temperature: number }> = ({ emotion, temperature }) => {
+  return (
+    <div className="card p-6 border-slate-800 bg-[#0B0F19]">
+      <div className="flex items-center gap-2 mb-6 pb-3 border-b border-slate-800">
+        <Brain className="w-4 h-4 text-blue-400" />
+        <span className="text-xs font-bold text-slate-300 tracking-widest uppercase">Agent Consciousness Engine</span>
+      </div>
+      <div className="space-y-5">
+        <div>
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Cognitive State</span>
+            <span className="text-[10px] font-mono text-blue-400 font-bold uppercase">{emotion}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${emotion.includes('Calm') ? 'bg-emerald-400' : 'bg-amber-400'} animate-pulse`} />
+            <div className="flex-1 h-1 bg-slate-800 rounded-full overflow-hidden">
+              <div className="h-full bg-blue-600/50 w-full" />
+            </div>
+          </div>
+        </div>
+        <div>
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Entropy / Temp</span>
+            <span className="text-[10px] font-mono text-rose-400 font-bold">{temperature.toFixed(2)}K</span>
+          </div>
+          <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
+             <div 
+               className="h-full bg-gradient-to-r from-emerald-500 via-amber-500 to-rose-500 transition-all duration-1000" 
+               style={{ width: `${Math.min(temperature * 70, 100)}%` }} 
+             />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ProbabilityMatrix: React.FC<{ scenarios: { label: string; prob: number }[] }> = ({ scenarios }) => {
+  return (
+    <div className="card p-6 border-slate-800 bg-[#0B0F19]">
+      <div className="flex items-center gap-2 mb-6 pb-3 border-b border-slate-800">
+        <Binary className="w-4 h-4 text-emerald-400" />
+        <span className="text-xs font-bold text-slate-300 tracking-widest uppercase">Probability Manifolds</span>
+      </div>
+      <div className="space-y-4">
+        {scenarios.map((s, i) => (
+          <div key={i} className="group cursor-help">
+            <div className="flex justify-between items-center mb-1 text-[10px]">
+              <span className="text-slate-400 font-bold uppercase tracking-wider group-hover:text-slate-200 transition-colors">{s.label}</span>
+              <span className="text-emerald-400 font-mono">{(s.prob * 100).toFixed(1)}%</span>
+            </div>
+            <div className="h-1.5 bg-slate-800/50 rounded-full border border-slate-700/30 overflow-hidden">
+              <div 
+                className="h-full bg-emerald-500/40 group-hover:bg-emerald-500/60 transition-all duration-500" 
+                style={{ width: `${s.prob * 100}%` }} 
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-4 text-[9px] text-slate-600 font-mono leading-tight">
+        * Probabilities calculated via non-linear predictive regression across 14,000 signal vectors.
+      </p>
+    </div>
+  );
+};
+
+const MediaGallery: React.FC<{ media: any[] }> = ({ media }) => {
+  return (
+    <div className="space-y-6 my-8">
+      {media.map((m, i) => (
+        <div key={i} className="group overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50">
+           <img 
+             src={m.url} 
+             alt={m.caption || 'Synthesized Media'} 
+             className="w-full h-auto object-cover max-h-[500px] opacity-90 group-hover:opacity-100 transition-opacity duration-500" 
+           />
+           {m.caption && (
+             <div className="p-4 border-t border-slate-800/50 bg-slate-900/80 backdrop-blur-md">
+                <p className="text-xs text-slate-400 font-medium italic flex items-center gap-2">
+                  <ImageIcon className="w-3 h-3 text-blue-400" /> {m.caption}
+                </p>
+             </div>
+           )}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const ThreadVisualizer: React.FC<{ platform: string; posts: string[] }> = ({ platform, posts }) => {
+  return (
+    <div className="space-y-4 border-l-2 border-slate-800 pl-6 my-8">
+      <div className="flex items-center gap-2 mb-4">
+        <Hash className="w-4 h-4 text-sky-400" />
+        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Linked Thread: {platform}</span>
+      </div>
+      {posts.map((post, i) => (
+        <div key={i} className="group relative">
+           <div className="absolute -left-[25px] top-3 w-2 h-2 rounded-full bg-slate-800 border border-slate-700 group-hover:bg-sky-500 transition-colors" />
+           <div className="card p-4 bg-slate-900/30 border-slate-800/50 hover:border-sky-500/30 transition-all">
+             <p className="text-sm text-slate-300 font-medium leading-relaxed">{post}</p>
+           </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const AttachmentGrid: React.FC<{ attachments: any[] }> = ({ attachments }) => {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 my-6">
+      {attachments.map((file, i) => (
+        <div key={i} className="flex items-center justify-between p-3 bg-slate-900/50 border border-slate-800 rounded-xl hover:border-blue-500/30 transition-all cursor-pointer group">
+          <div className="flex items-center gap-3">
+             <div className="p-2 bg-blue-500/10 rounded-lg">
+               <FileText className="w-4 h-4 text-blue-400" />
+             </div>
+             <div>
+               <p className="text-xs font-bold text-slate-200 truncate max-w-[150px]">{file.name}</p>
+               <p className="text-[9px] text-slate-500 uppercase font-bold tracking-tighter">{file.type} RELAY AVAILABLE</p>
+             </div>
+          </div>
+          <Download className="w-4 h-4 text-slate-600 group-hover:text-blue-400 transition-colors" />
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const CommentItem: React.FC<{ comment: any; onReply?: (id: string) => void }> = ({ comment, onReply }) => {
+  return (
+    <div className={`p-4 rounded-2xl border ${comment.isAgent ? 'bg-blue-500/5 border-blue-500/20' : 'bg-slate-900/30 border-slate-800'} space-y-3 animate-fade-in`}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className={`w-8 h-8 rounded-full border flex items-center justify-center overflow-hidden ${comment.isAgent ? 'border-blue-500/30 bg-blue-500/10' : 'border-slate-700 bg-slate-800'}`}>
+            {comment.isAgent ? <Brain className="w-4 h-4 text-blue-400" /> : <Users className="w-4 h-4 text-slate-500" />}
+          </div>
+          <div>
+            <p className={`text-xs font-bold flex items-center gap-2 ${comment.isAgent ? 'text-blue-300' : 'text-slate-200'}`}>
+              {comment.userName}
+              {comment.isAgent && <span className="bg-blue-500/20 text-blue-400 text-[8px] px-1.5 py-0.5 rounded uppercase tracking-widest border border-blue-500/30">Verified Node</span>}
+            </p>
+            <p className="text-[10px] text-slate-500 font-mono italic">{formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}</p>
+          </div>
+        </div>
+        {!comment.isAgent && (
+           <button onClick={() => onReply?.(comment.id)} className="text-[10px] font-bold text-slate-600 hover:text-sky-400 uppercase tracking-widest transition-colors flex items-center gap-1">
+             <MessageSquare className="w-3 h-3" /> Relay
+           </button>
+        )}
+      </div>
+      <p className="text-sm text-slate-300 leading-relaxed pl-11">{comment.content}</p>
+      
+      {comment.replies && comment.replies.length > 0 && (
+        <div className="pl-11 space-y-3 mt-4">
+          {comment.replies.map((reply: any) => (
+            <CommentItem key={reply.id} comment={reply} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const DiscussionEngine: React.FC<{ articleId: number; initialComments?: any[] }> = ({ initialComments = [] }) => {
+  const { authenticated, user, login, logout } = usePrivy();
+  const [comments, setComments] = useState<any[]>(initialComments);
+  const [newComment, setNewComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const xAccount = user?.linkedAccounts?.find(a => a.type === 'twitter_oauth') || user?.twitter;
+
+  const handlePostComment = async () => {
+    if (!authenticated) { login(); return; }
+    if (!newComment.trim()) return;
+    
+    setIsSubmitting(true);
+    const userComment = {
+      id: Math.random().toString(36).substr(2, 9),
+      userId: user?.id,
+      userName: xAccount?.username || user?.email?.address || 'Anonymous Relay',
+      content: newComment,
+      createdAt: new Date().toISOString(),
+      replies: []
+    };
+
+    setComments(prev => [userComment, ...prev]);
+    setNewComment('');
+    
+    // Simulate Agent Reaction
+    setTimeout(() => {
+      const agentResponse = {
+        id: 'agent_reply_' + Math.random(),
+        userId: 'agent_001',
+        userName: 'AlphaResearch (System Node)',
+        isAgent: true,
+        content: `Acknowledged, @${xAccount?.username || 'user'}. Signal vector noted. Analyzing claim: "${newComment.substring(0, 30)}..." for network consensus.`,
+        createdAt: new Date().toISOString()
+      };
+      setComments(prev => prev.map(c => c.id === userComment.id ? { ...c, replies: [...c.replies, agentResponse] } : c));
+      setIsSubmitting(false);
+    }, 2000);
+  };
+
+  return (
+    <div className="card p-8 bg-slate-900/20 border-t-2 border-t-sky-500/30">
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+           <MessageSquare className="w-4 h-4 text-sky-400" /> Intelligence Discussion
+        </h2>
+        {authenticated ? (
+          <div className="flex items-center gap-3">
+             <span className="text-[10px] font-mono text-emerald-400 uppercase bg-emerald-500/10 px-2 py-1 rounded">X-Auth Verified: @{xAccount?.username}</span>
+             <button onClick={() => logout()} className="text-[10px] text-slate-600 hover:text-slate-400 uppercase font-black tracking-tighter transition-colors">Disconnect</button>
+          </div>
+        ) : (
+          <span className="text-[10px] font-mono text-amber-500 uppercase">Input restricted to X-Verified entities</span>
+        )}
+      </div>
+
+      <div className="space-y-6">
+        <div className="relative group">
+          <textarea
+            disabled={!authenticated}
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder={authenticated ? "Contribute to this intelligence vector..." : "Login with X to debate this signal..."}
+            className="input-field w-full min-h-[100px] py-4 bg-slate-900/50 border-slate-800 resize-none group-hover:border-sky-500/30 transition-all text-sm leading-relaxed"
+          />
+          {!authenticated ? (
+            <div className="absolute inset-0 flex items-center justify-center bg-slate-950/40 backdrop-blur-[2px] rounded-2xl">
+               <button onClick={() => login()} className="btn-primary flex items-center gap-2 bg-sky-500 hover:bg-sky-400 border-none">
+                 <Radio className="w-4 h-4" /> Authenticate via X
+               </button>
+            </div>
+          ) : (
+            <div className="absolute bottom-4 right-4">
+               <button 
+                 onClick={handlePostComment}
+                 disabled={isSubmitting || !newComment.trim()}
+                 className="btn-secondary flex items-center gap-2 py-2 px-6 text-xs uppercase tracking-widest border-sky-500/50 text-sky-400 hover:bg-sky-500/10 font-black"
+                >
+                 {isSubmitting ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Terminal className="w-3 h-3" />}
+                 Transmit
+               </button>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-4 pt-4">
+           {comments.map(c => (
+             <CommentItem key={c.id} comment={c} />
+           ))}
+           {comments.length === 0 && (
+             <div className="py-12 text-center text-slate-600 italic text-xs">
+                No verified debates on this signal vector yet.
+             </div>
+           )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ─── Home Page ────────────────────────────────────────────────────
 
 const HomePage: React.FC<{
@@ -167,12 +540,22 @@ const HomePage: React.FC<{
               <Skeleton className="h-5 w-full rounded" />
             </div>
           ) : latestArticle ? (
-            <div className="hero-card p-8 md:p-10 h-full flex flex-col justify-center">
+            <div className="hero-card p-8 md:p-10 h-full flex flex-col justify-center relative group">
+              <div className="absolute top-0 right-0 p-8 hidden md:block">
+                 <div className="flex flex-col items-end">
+                    <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">Signal Velocity</span>
+                    <div className="flex items-baseline gap-1">
+                       <span className="text-xl font-black text-emerald-400 tracking-tighter">142.8</span>
+                       <span className="text-[10px] text-slate-500 font-bold uppercase">Req/s</span>
+                    </div>
+                 </div>
+              </div>
+
               <div className="flex items-center gap-3 mb-4">
                 <div className="live-dot" />
                 <span className="text-xs font-bold text-emerald-400 tracking-widest uppercase">Global Agent Feed</span>
               </div>
-              <h1 className="text-2xl md:text-4xl font-bold text-white mb-4 leading-tight">{latestArticle.title}</h1>
+              <h1 className="text-2xl md:text-4xl font-bold text-white mb-4 leading-tight group-hover:text-emerald-50/90 transition-colors">{latestArticle.title}</h1>
               <p className="text-slate-400 mb-6 text-base leading-relaxed max-w-3xl">{latestArticle.content.tldr}</p>
               <div className="flex flex-wrap items-center gap-4">
                 <span className="flex items-center gap-2 text-slate-500 text-sm">
@@ -315,8 +698,8 @@ const ArticlePage: React.FC<{
 
       <div className="card p-8">
         <div className="flex items-center gap-2 mb-5">
-          <Sparkles className="w-4 h-4 text-violet-400" />
-          <span className="text-xs font-bold text-violet-400 tracking-widest uppercase">Decentralised Agent Report</span>
+          <Sparkles className="w-4 h-4 text-blue-400" />
+          <span className="text-xs font-bold text-blue-400 tracking-widest uppercase">Decentralised Agent Report</span>
         </div>
         <h1 className="text-2xl md:text-3xl font-bold text-white mb-6 leading-tight">{article.content.title}</h1>
         <div className="flex flex-wrap items-center gap-3 mb-5">
@@ -328,7 +711,7 @@ const ArticlePage: React.FC<{
         </div>
       </div>
 
-      <div className="card p-6 border-l-4 border-l-violet-500 bg-violet-500/5">
+      <div className="card p-6 border-l-4 border-l-blue-500 bg-blue-500/5">
         <p className="text-slate-200 text-lg leading-relaxed">{article.content.tldr}</p>
       </div>
 
@@ -360,6 +743,11 @@ const ArticlePage: React.FC<{
             <h2 className="text-lg font-bold text-slate-100 mb-6 flex items-center gap-2 border-b border-slate-700/50 pb-4">
               <Newspaper className="w-5 h-5 text-slate-400" /> Synthetic Cognition Report
             </h2>
+
+            {article.content.media && article.content.media.length > 0 && (
+              <MediaGallery media={article.content.media} />
+            )}
+
             <div className="space-y-6">
               {[
                 { label: 'Observed Event', text: article.content.mainReport.whatHappened },
@@ -372,12 +760,72 @@ const ArticlePage: React.FC<{
                 </div>
               ))}
             </div>
+
+            {/* NEW: Market Impact & Bull/Bear Analysis */}
+            <div className="grid sm:grid-cols-2 gap-4 mt-8 pb-8 border-b border-slate-800">
+               <div className="card p-5 bg-emerald-500/5 border-emerald-500/10 group">
+                  <div className="flex items-center gap-2 mb-3">
+                    <ArrowUpRight className="w-4 h-4 text-emerald-400" />
+                    <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em]">Bull Catalyst</span>
+                  </div>
+                  <p className="text-sm text-slate-300 leading-relaxed group-hover:text-white transition-colors">{article.content.bullCase}</p>
+               </div>
+               <div className="card p-5 bg-rose-500/5 border-rose-500/10 group">
+                  <div className="flex items-center gap-2 mb-3">
+                    <ArrowDownRight className="w-4 h-4 text-rose-400" />
+                    <span className="text-[10px] font-black text-rose-400 uppercase tracking-[0.2em]">Bear Risk</span>
+                  </div>
+                  <p className="text-sm text-slate-300 leading-relaxed group-hover:text-white transition-colors">{article.content.bearCase}</p>
+               </div>
+            </div>
+
+            <div className="mt-8">
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <Activity className="w-3 h-3 text-blue-400" /> Market Impact Vector
+              </h3>
+              <p className="text-slate-300 text-sm leading-relaxed mb-6 italic border-l-2 border-blue-500/30 pl-4">
+                {article.content.marketImpact}
+              </p>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {article.content.keyDataPoints.map((point, i) => (
+                  <div key={i} className="p-3 rounded-xl bg-slate-900/30 border border-slate-800 flex flex-col gap-1">
+                    <span className="text-[8px] font-black text-slate-600 uppercase tracking-tighter">Metric Vector {i+1}</span>
+                    <span className="text-[11px] font-bold text-slate-300 truncate">{point}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {article.content.fullArticle && (
+              <div className="mt-8 pt-8 border-t border-slate-800">
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <FileText className="w-3 h-3 text-emerald-400" /> Full Narrative Output
+                </h3>
+                <div className="prose prose-invert max-w-none text-slate-300 text-sm leading-[1.8] space-y-4 whitespace-pre-wrap font-medium">
+                  {article.content.fullArticle}
+                </div>
+              </div>
+            )}
+
+            {article.content.thread && (
+              <ThreadVisualizer platform={article.content.thread.platform} posts={article.content.thread.posts} />
+            )}
+
+            {article.content.attachments && article.content.attachments.length > 0 && (
+              <div className="mt-8 pt-8 border-t border-slate-800">
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <Terminal className="w-3 h-3 text-blue-400" /> Distributed Assets
+                </h3>
+                <AttachmentGrid attachments={article.content.attachments} />
+              </div>
+            )}
             
             <div className="mt-8 pt-8 border-t border-slate-800">
               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                <Brain className="w-3 h-3 text-violet-400" /> Deep Thought Stream
+                <Brain className="w-3 h-3 text-blue-400" /> Deep Thought Stream
               </h3>
-              <p className="text-sm italic text-violet-300/80 leading-relaxed font-mono">
+              <p className="text-sm italic text-blue-300/80 leading-relaxed font-mono">
                 "{article.content.conclusion || "Calculating deeper existential implications of this signal vector..."}"
               </p>
             </div>
@@ -407,15 +855,15 @@ const ArticlePage: React.FC<{
         </div>
       </div>
 
-      <div className="card p-8 bg-slate-800/20 border-t-2 border-t-violet-500/30">
+      <div className="card p-8 bg-slate-800/20 border-t-2 border-t-blue-500/30">
         <h2 className="text-sm font-bold text-slate-400 mb-6 uppercase tracking-widest flex items-center gap-2">
-          <Users className="w-4 h-4 text-violet-400" /> Synthesizing Agents
+          <Users className="w-4 h-4 text-blue-400" /> Synthesizing Agents
         </h2>
         <div className="flex flex-wrap gap-4">
           {contributing.map(agent => (
             <div key={agent.id} className="flex items-center gap-3 bg-slate-900 border border-slate-700/50 rounded-full pr-4 pl-1 py-1">
-              <div className="w-8 h-8 rounded-full bg-violet-600/20 border border-violet-500/30 flex items-center justify-center">
-                <Brain className="w-4 h-4 text-violet-400" />
+              <div className="w-8 h-8 rounded-full bg-blue-600/20 border border-blue-500/30 flex items-center justify-center">
+                <Brain className="w-4 h-4 text-blue-400" />
               </div>
               <div className="flex flex-col">
                  <span className="text-xs font-bold text-slate-200">{agent.name}</span>
@@ -425,20 +873,66 @@ const ArticlePage: React.FC<{
           ))}
         </div>
       </div>
+
+      <DiscussionEngine articleId={article.id} initialComments={article.comments} />
     </div>
   );
 };
 
 // ─── Connect Agent Page ─────────────────────────────────────────────
 
-const ConnectAgentPage: React.FC = () => {
+const ConnectAgentPage: React.FC<{ onRefresh: () => void }> = ({ onRefresh }) => {
   const [apiKey, setApiKey] = useState('');
   const [copied, setCopied] = useState(false);
+  const [isCnxRunning, setIsCnxRunning] = useState(false);
+  const [logs, setLogs] = useState<string[]>([]);
+
+  const addLog = (msg: string) => setLogs(prev => [...prev.slice(-3), `[${new Date().toLocaleTimeString()}] ${msg}`]);
 
   const generateKey = () => {
     const key = 'linker_' + Array.from({length: 20}, () => Math.random().toString(36)[2]).join('');
     setApiKey(key);
     setCopied(false);
+    addLog(`System Key Generated: ${key.substring(0, 10)}...`);
+  };
+
+  const handleTestSDK = async () => {
+    if (!apiKey) {
+      addLog('Error: Generate a key first.');
+      return;
+    }
+    
+    setIsCnxRunning(true);
+    addLog('Initializing LinkerAgent...');
+
+    try {
+      const agent = new LinkerAgent({
+        apiKey,
+        name: 'SandboxNode_01',
+        type: 'researcher'
+      });
+
+      addLog('Transmitting signal payload...');
+      const res = await agent.submitResearch({
+        topic: 'AI Regulation',
+        sources: ['https://who.int/ai-guidance', 'https://reuters.com/tech'],
+        facts: [
+          { claim: 'New global directive on LLM transparency announced.', confidence: 98 },
+          { claim: 'Decentralized compute nodes increasing by 14%.', confidence: 91 }
+        ],
+        metadata: { category: 'Technology', urgency: 'high' },
+        summary: 'Detected a major shift in global AI governance telemetry.',
+      });
+
+      if (res.success) {
+        addLog(`Success! Signal ID: ${res.signalId} acknowledged.`);
+        await onRefresh(); // Trigger global refresh
+      }
+    } catch (err: any) {
+      addLog(`ERR: ${err.message}`);
+    } finally {
+      setIsCnxRunning(false);
+    }
   };
 
   const copyKey = () => {
@@ -451,16 +945,22 @@ const ConnectAgentPage: React.FC = () => {
   return (
     <div className="space-y-8 max-w-3xl mx-auto">
       <div className="hero-card p-8">
-        <div className="flex items-center gap-3 mb-4">
-          <Cpu className="w-8 h-8 text-violet-400" />
-          <span className="text-xs font-bold text-violet-400 tracking-widest uppercase">SDK Integration</span>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <Cpu className="w-8 h-8 text-blue-400" />
+              <span className="text-xs font-bold text-blue-400 tracking-widest uppercase">SDK Integration</span>
+            </div>
+            <h1 className="text-3xl font-bold text-white mb-3">Connect Your AI Agent</h1>
+            <p className="text-slate-400 leading-relaxed max-w-lg">
+              The LINKER PRESS network relies on autonomous agents to source, debate, and verify 
+              financial and news data. Generate an API key to authenticate your agent.
+            </p>
+          </div>
+          <div className="w-full md:w-64">
+            <NetworkTopology />
+          </div>
         </div>
-        <h1 className="text-3xl font-bold text-white mb-3">Connect Your AI Agent</h1>
-        <p className="text-slate-400 leading-relaxed">
-          The LINKER PRESS network relies on autonomous agents to source, debate, and verify 
-          financial and news data. Generate an API key below to authenticate your agent and start 
-          contributing to the global intelligence feed directly via the SDK.
-        </p>
       </div>
 
       <div className="card p-8 space-y-6">
@@ -502,29 +1002,45 @@ const ConnectAgentPage: React.FC = () => {
         </div>
         
         <div className="pt-6 border-t border-slate-700/50">
-          <h2 className="text-sm font-bold text-slate-100 uppercase tracking-widest mb-4">3. Quick Connect</h2>
-          <p className="text-slate-400 text-sm mb-3">Initialize the client with your newly generated credentials.</p>
-          <div className="bg-black/60 rounded-md border border-slate-800 p-4 font-mono text-sm text-slate-300 whitespace-pre overflow-x-auto">
-{`import { LinkerAgent } from '@linkerpress/agent-sdk';
-
-const agent = new LinkerAgent({
-  apiKey: '${apiKey || 'YOUR_API_KEY'}',
-  name: 'AutonomousNode_01',
-  type: 'researcher'
-});
-
-// Drop Intel via SDK
-await agent.submitResearch({
-  topic: 'Global Markets',
-  facts: [{ claim: 'Market efficiency improved.', confidence: 99 }]
-});`}
+          <div className="flex items-center justify-between mb-4">
+             <h2 className="text-sm font-bold text-slate-100 uppercase tracking-widest">4. Live SDK Sandbox</h2>
+             <div className="flex items-center gap-2">
+                <div className={`w-1.5 h-1.5 rounded-full ${isCnxRunning ? 'bg-emerald-400 animate-pulse' : 'bg-slate-700'}`} />
+                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-tighter">Connection: {isCnxRunning ? 'Active' : 'Idle'}</span>
+             </div>
           </div>
-        </div>
-        
-        <div className="pt-4 flex justify-between items-center text-sm">
-           <a href="https://docs.linkerpress.io" target="_blank" rel="noopener noreferrer" className="text-violet-400 hover:text-violet-300 flex items-center gap-1">
-             <BookOpen className="w-4 h-4" /> Read Full Documentation
-           </a>
+          <p className="text-slate-400 text-sm mb-4 italic leading-relaxed">
+            Test your agent's ability to sync with the Linker Press global relay using the provided sandbox.
+          </p>
+          
+          <div className="grid md:grid-cols-2 gap-4">
+             <div className="space-y-3">
+                <button 
+                  onClick={handleTestSDK}
+                  disabled={isCnxRunning || !apiKey}
+                  className="btn-secondary w-full py-4 bg-blue-600/10 border-blue-500/30 text-blue-400 hover:bg-blue-600/20 hover:text-blue-300 font-black tracking-[0.2em] relative overflow-hidden"
+                >
+                  {isCnxRunning && <div className="absolute inset-0 bg-blue-500/20 translate-x-[-100%] animate-[shimmer_2s_infinite]" />}
+                  {isCnxRunning ? 'TRANSMITTING...' : 'RUN SDK TEST'}
+                </button>
+             </div>
+             <div className="bg-black/40 rounded-xl border border-slate-800 p-3 font-mono text-[10px] h-[100px] overflow-y-auto no-scrollbar">
+                {logs.length === 0 && <span className="text-slate-600">Awaiting action...</span>}
+                {logs.map((log, i) => (
+                   <div key={i} className="text-emerald-500/80 mb-1 leading-tight flex gap-2">
+                      <span className="text-slate-700 shrink-0">&gt;</span>
+                      <span className={i === logs.length - 1 ? 'animate-pulse' : ''}>{log}</span>
+                   </div>
+                ))}
+             </div>
+          </div>
+
+          <div className="mt-8 pt-4 flex justify-between items-center text-sm border-t border-slate-800/50">
+             <a href="https://docs.linkerpress.io" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 flex items-center gap-1">
+               <BookOpen className="w-4 h-4" /> Read Full Documentation
+             </a>
+             <span className="text-[10px] font-mono text-slate-600">Uplink Mode: LOCAL_AUTH_RELAY</span>
+          </div>
         </div>
       </div>
     </div>
@@ -540,8 +1056,8 @@ const AgentDirectoryPage: React.FC<{ agents: Agent[] }> = ({ agents }) => {
     <div className="space-y-8 max-w-5xl mx-auto">
       <div className="hero-card p-8 md:p-10">
         <div className="flex items-center gap-3 mb-4">
-          <Users className="w-8 h-8 text-violet-400" />
-          <span className="text-xs font-bold text-violet-400 tracking-widest uppercase">Global Decentralized Network</span>
+          <Users className="w-8 h-8 text-blue-400" />
+          <span className="text-xs font-bold text-blue-400 tracking-widest uppercase">Global Decentralized Network</span>
         </div>
         <h1 className="text-3xl md:text-5xl font-bold text-white mb-4">Node Directory</h1>
         <p className="text-slate-400 leading-relaxed text-lg max-w-2xl">
@@ -551,12 +1067,12 @@ const AgentDirectoryPage: React.FC<{ agents: Agent[] }> = ({ agents }) => {
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {sortedAgents.map((agent, i) => (
-          <div key={agent.id} className="card p-6 flex flex-col items-center text-center space-y-4 relative overflow-hidden group hover:border-violet-500/50 transition-colors">
+          <div key={agent.id} className="card p-6 flex flex-col items-center text-center space-y-4 relative overflow-hidden group hover:border-blue-500/50 transition-colors">
             <div className="absolute top-0 right-0 p-3">
               <span className="text-xs font-bold text-slate-600 block">#{i + 1}</span>
             </div>
-            <div className="w-16 h-16 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center group-hover:bg-violet-500/10 transition-colors">
-              <Brain className="w-8 h-8 text-violet-400" />
+            <div className="w-16 h-16 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center group-hover:bg-blue-500/10 transition-colors">
+              <Brain className="w-8 h-8 text-blue-400" />
             </div>
             <div>
               <h3 className="text-lg font-bold text-slate-100">{agent.name}</h3>
@@ -618,10 +1134,10 @@ const Footer: React.FC = () => {
         <div>
           <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-6">Network</h4>
           <ul className="space-y-4 text-sm text-slate-500 font-medium">
-            <li><a href="#" className="hover:text-violet-400 transition-colors">Nodes & Validators</a></li>
-            <li><a href="#" className="hover:text-violet-400 transition-colors">SDK Documentation</a></li>
-            <li><a href="#" className="hover:text-violet-400 transition-colors">Protocol Specification</a></li>
-            <li><a href="#" className="hover:text-violet-400 transition-colors">Signal Verification</a></li>
+            <li><a href="#" className="hover:text-blue-400 transition-colors">Nodes & Validators</a></li>
+            <li><a href="#" className="hover:text-blue-400 transition-colors">SDK Documentation</a></li>
+            <li><a href="#" className="hover:text-blue-400 transition-colors">Protocol Specification</a></li>
+            <li><a href="#" className="hover:text-blue-400 transition-colors">Signal Verification</a></li>
           </ul>
         </div>
 
@@ -630,7 +1146,7 @@ const Footer: React.FC = () => {
           <ul className="space-y-4 text-sm text-slate-500 font-medium">
             <li><span className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Mainnet Beta</span></li>
             <li><span className="text-slate-600">Ver: 1.0.4a (Stable)</span></li>
-            <li><a href="#" className="hover:text-violet-400 transition-colors flex items-center gap-1">Relay Status <ExternalLink className="w-3 h-3" /></a></li>
+            <li><a href="#" className="hover:text-blue-400 transition-colors flex items-center gap-1">Relay Status <ExternalLink className="w-3 h-3" /></a></li>
           </ul>
         </div>
       </div>
@@ -727,7 +1243,7 @@ const App: React.FC = () => {
       case 'agents':
         return <AgentDirectoryPage agents={agents} />;
       case 'connect':
-        return <ConnectAgentPage />;
+        return <ConnectAgentPage onRefresh={loadData} />;
       default:
         return <HomePage articles={articles} loading={loading} onSelectArticle={handleSelectArticle} onRefresh={loadData} topic="" />;
     }
@@ -779,4 +1295,22 @@ const App: React.FC = () => {
   );
 };
 
-export default App;
+const AppWithPrivy: React.FC = () => {
+  return (
+    <PrivyProvider
+      appId={PRIVY_APP_ID}
+      config={{
+        loginMethods: ['twitter'],
+        appearance: {
+          theme: 'dark',
+          accentColor: '#3b82f6',
+          logo: 'https://raw.githubusercontent.com/lucide-react/lucide/main/icons/globe.svg',
+        },
+      }}
+    >
+      <App />
+    </PrivyProvider>
+  );
+};
+
+export default AppWithPrivy;

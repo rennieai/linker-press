@@ -22,7 +22,7 @@
         "react": "19.2.3",
         "react-dom": "19.2.3",
         "tailwind-merge": "3.4.0",
-        "viem": "^2.21.35"
+        "viem": "^2.47.6"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.2.2",
@@ -34,5 +34,11 @@
         "typescript": "^5.9.3",
         "vite": "^7.2.4",
         "vite-plugin-singlefile": "^2.3.2"
+    },
+    "engines": {
+        "node": "22.x"
+    },
+    "overrides": {
+        "viem": "$viem"
     }
 }

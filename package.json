@@ -40,8 +40,9 @@
         "viem": "$viem"
     },
     "optionalDependencies": {
-        "@lightningcss/linux-x64-gnu": "^1.32.0",
-        "@lightningcss/linux-x64-musl": "^1.32.0",
-        "@esbuild/linux-x64": "^0.24.2"
+        "lightningcss-linux-x64-gnu": "1.32.0",
+        "lightningcss-linux-x64-musl": "1.32.0",
+        "lightningcss-win32-x64-msvc": "1.32.0",
+        "@esbuild/linux-x64": "0.24.2"
     }
 }

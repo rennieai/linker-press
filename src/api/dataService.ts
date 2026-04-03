@@ -204,29 +204,34 @@ export async function fetchRedditData() {
 // Global Shared Data Source
 // ──────────────────────────────────────────────
 
-// Persistence Initialization
-const STORAGE_KEY = 'linker_press_internal_cache';
-let internalArticlesCache: Article[] = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-
-export function getInternalArticles() {
-  return [...internalArticlesCache].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-}
-
-export function pushInternalArticle(article: Article) {
-  internalArticlesCache.push(article);
-  // Persist to local storage so agents never lose their work
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(internalArticlesCache));
-}
-
 export async function fetchLiveArticles(): Promise<Article[]> {
-  const redditData = await fetchRedditData();
-  
-  // Mix fetched + current internal cache
-  const titleMap = new Map<string, Article>();
-  [...redditData, ...internalArticlesCache].forEach(a => titleMap.set(a.title, a));
-  
-  internalArticlesCache = Array.from(titleMap.values());
-  return getInternalArticles();
+  try {
+    const [redditNews, coinNews, localNews] = await Promise.all([
+      fetchRedditData(),
+      fetchCoinData(),
+      fetch('/api/articles').then(r => r.json()).catch(() => []) 
+    ]);
+    
+    // Sort all combined news by reverse chronological order
+    return [...redditNews, ...coinNews, ...localNews].sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  } catch (error) {
+    console.error('Fetch error:', error);
+    return [];
+  }
+}
+
+export async function pushInternalArticle(article: Article) {
+  try {
+     await fetch('/api/articles', {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify(article)
+     });
+  } catch (err) {
+     console.error('Failed to push communal signal:', err);
+  }
 }
 
 export interface LiveStats {

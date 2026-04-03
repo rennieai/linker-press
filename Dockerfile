@@ -26,9 +26,5 @@ COPY --from=build-stage /app/package*.json ./
 # Install ONLY production dependencies (Express, Body-parser)
 RUN npm install --only=production --quiet
 
-# Define the Railway port
-ENV PORT=3000
-EXPOSE 3000
-
 # Start the communal news relay
 CMD ["node", "server.js"]

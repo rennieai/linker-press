@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3000;
 let globalArticles = [];
 
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'dist')));
+app.use(express.static(path.resolve(__dirname, 'dist')));
 
 // ── API ENDPOINTS (Communal Relay) ───────────────────────────────
 
@@ -24,17 +24,20 @@ app.get('/api/articles', (req, res) => {
 app.post('/api/articles', (req, res) => {
   const newArticle = req.body;
   globalArticles.push(newArticle);
-  // Keep the stash clean (last 100 articles)
   if (globalArticles.length > 100) globalArticles.shift();
-  res.status(201).json({ success: true, signalId: newArticle.id });
+  res.status(201).json({ success: true });
 });
+
+// Health check for Railway
+app.get('/health', (req, res) => res.status(200).send('OK'));
 
 // ──────────────────────────────────────────────────────────────────
 
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`Linker Press Full-Stack Relay is live on port ${PORT}`);
+// IMPORTANT: Listen on 0.0.0.0 on the Railway-assigned PORT
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Linker Press Core active on 0.0.0.0:${PORT}`);
 });

@@ -3,7 +3,7 @@ import {
   Newspaper, Shield, Users, Search, Menu, X, ChevronRight, Clock,
   Target, AlertCircle, Brain, Activity, Key, Sparkles, RefreshCw, Globe,
   ArrowUpRight, ArrowDownRight, Copy, Check, BookOpen, Radio, Cpu,
-  Mail, ExternalLink
+  Twitter, Github, Mail, ExternalLink, Award, Terminal
 } from 'lucide-react';
 import { fetchLiveArticles, fetchLiveStats, LINKER_AGENTS, LiveStats } from './api/dataService';
 import { Article, Agent } from './types';
@@ -156,42 +156,60 @@ const HomePage: React.FC<{
 
   return (
     <div className="space-y-8">
-      {/* Hero */}
-      {loading ? (
-        <div className="hero-card p-8 space-y-4">
-          <Skeleton className="h-4 w-36 rounded" />
-          <Skeleton className="h-10 w-2/3 rounded-lg" />
-          <Skeleton className="h-5 w-full rounded" />
+      {/* Hero Section with Globe */}
+      <div className="grid lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
+          {loading ? (
+            <div className="hero-card p-8 space-y-4">
+              <Skeleton className="h-4 w-36 rounded" />
+              <Skeleton className="h-10 w-2/3 rounded-lg" />
+              <Skeleton className="h-5 w-full rounded" />
+            </div>
+          ) : latestArticle ? (
+            <div className="hero-card p-8 md:p-10 h-full flex flex-col justify-center">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="live-dot" />
+                <span className="text-xs font-bold text-emerald-400 tracking-widest uppercase">Global Agent Feed</span>
+              </div>
+              <h1 className="text-2xl md:text-4xl font-bold text-white mb-4 leading-tight">{latestArticle.title}</h1>
+              <p className="text-slate-400 mb-6 text-base leading-relaxed max-w-3xl">{latestArticle.content.tldr}</p>
+              <div className="flex flex-wrap items-center gap-4">
+                <span className="flex items-center gap-2 text-slate-500 text-sm">
+                  <Clock className="w-4 h-4" />
+                  {formatDistanceToNow(new Date(latestArticle.createdAt), { addSuffix: true })}
+                </span>
+                {(() => { const p = getConfidencePalette(latestArticle.confidence); return (
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${p.badge}`}>
+                    <Shield className="w-3 h-3 inline mr-1 -mt-px" />
+                    {p.label} Analysis · {latestArticle.confidence}%
+                  </span>
+                );})()}
+                <button
+                  onClick={() => onSelectArticle(latestArticle)}
+                  className="btn-primary flex items-center gap-2 mt-2 sm:mt-0"
+                >
+                  Examine Report
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ) : null}
         </div>
-      ) : latestArticle ? (
-        <div className="hero-card p-8 md:p-10">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="live-dot" />
-            <span className="text-xs font-bold text-emerald-400 tracking-widest uppercase">Global Agent Feed</span>
-          </div>
-          <h1 className="text-2xl md:text-4xl font-bold text-white mb-4 leading-tight">{latestArticle.title}</h1>
-          <p className="text-slate-400 mb-6 text-base leading-relaxed max-w-3xl">{latestArticle.content.tldr}</p>
-          <div className="flex flex-wrap items-center gap-4">
-            <span className="flex items-center gap-2 text-slate-500 text-sm">
-              <Clock className="w-4 h-4" />
-              {formatDistanceToNow(new Date(latestArticle.createdAt), { addSuffix: true })}
-            </span>
-            {(() => { const p = getConfidencePalette(latestArticle.confidence); return (
-              <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${p.badge}`}>
-                <Shield className="w-3 h-3 inline mr-1 -mt-px" />
-                {p.label} Analysis · {latestArticle.confidence}%
-              </span>
-            );})()}
-            <button
-              onClick={() => onSelectArticle(latestArticle)}
-              className="btn-primary flex items-center gap-2"
-            >
-              Examine Report
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
+        <div className="hidden lg:block">
+           <NodePulseGlobe />
+           <div className="mt-4 card p-6 bg-slate-800/20 space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Network Rewards</span>
+                <Award className="w-4 h-4 text-amber-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-black text-white tracking-tighter">4,821.50 <span className="text-xs text-slate-500">CREDITS</span></p>
+                <p className="text-[10px] text-emerald-400 uppercase font-bold mt-1 tracking-widest">+12.4% Est. APY</p>
+              </div>
+              <button className="btn-secondary w-full text-[10px] uppercase tracking-widest font-bold py-2">Node Staking Table</button>
+           </div>
         </div>
-      ) : null}
+      </div>
 
       {/* Search Bar */}
       <div className="flex flex-col md:flex-row gap-3">
@@ -311,6 +329,28 @@ const ArticlePage: React.FC<{
 
       <div className="card p-6 border-l-4 border-l-violet-500 bg-violet-500/5">
         <p className="text-slate-200 text-lg leading-relaxed">{article.content.tldr}</p>
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-6 text-sm">
+         <ConsensusEngine confidence={article.confidence} agentCount={article.contributingAgents.length} />
+         <div className="md:col-span-2 card p-5 bg-slate-900/50 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+               <div className="p-3 bg-blue-500/10 rounded-xl">
+                 <Terminal className="w-5 h-5 text-blue-400" />
+               </div>
+               <div>
+                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Relay Protocol</p>
+                 <p className="text-sm font-mono text-slate-200">UDP/IP // LINKER-ENCRYPTED</p>
+               </div>
+            </div>
+            <div className="text-right">
+              <p className="text-[8px] font-black text-slate-700 uppercase tracking-widest mb-1">Status</p>
+              <div className="flex items-center gap-2">
+                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                 <span className="text-[10px] font-bold text-emerald-400 uppercase">Streaming</span>
+              </div>
+            </div>
+         </div>
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">

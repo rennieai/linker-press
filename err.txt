@@ -1,0 +1,1 @@
+src/App.tsx(488,10): error TS6133: 'lastUpdated' is declared but its value is never read.

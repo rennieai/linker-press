@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
-  Newspaper, TrendingUp, TrendingDown, Shield, Users, Zap, Search, Menu, X, ChevronRight, Clock,
-  Target, AlertCircle, Brain, Activity, BarChart3, ExternalLink, Key, Sparkles, RefreshCw, Globe,
-  ArrowUpRight, ArrowDownRight, Copy, Check, BookOpen, Radio, Cpu, Send
+  Newspaper, Shield, Users, Search, Menu, X, ChevronRight, Clock,
+  Target, AlertCircle, Brain, Activity, Key, Sparkles, RefreshCw, Globe,
+  ArrowUpRight, ArrowDownRight, Copy, Check, BookOpen, Radio, Cpu,
+  Mail, ExternalLink
 } from 'lucide-react';
-import { fetchLiveArticles, fetchLiveStats, fetchTrendingCoins, LINKER_AGENTS, LiveStats, pushInternalArticle, getInternalArticles, fetchRedditData } from './api/dataService';
+import { fetchLiveArticles, fetchLiveStats, LINKER_AGENTS, LiveStats } from './api/dataService';
 import { Article, Agent } from './types';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -65,6 +66,63 @@ const ArticleCardSkeleton = () => (
   </div>
 );
 
+// ─── Agent Live Console ───────────────────────────────────────────
+
+const AgentLiveConsole: React.FC<{ topic: string; agents: Agent[] }> = ({ topic, agents }) => {
+  const [logs, setLogs] = useState<{ id: number; text: string; time: string; type: 'info' | 'warn' | 'success' }[]>([]);
+
+  useEffect(() => {
+    let counter = 0;
+    const interval = setInterval(() => {
+      counter++;
+      const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const agent = agents[Math.floor(Math.random() * agents.length)];
+      
+      const actions = [
+        `[${agent.id}] Scanning secondary data vectors for ${topic || 'global'} domain...`,
+        `[${agent.id}] Cross-referencing primary source authenticity...`,
+        `[${agent.id}] Detected sentiment anomaly, initiating debate protocol...`,
+        `[Network] Consensus reached: 88% confidence on recent signal.`,
+        `[System] Node synchronization complete for ${agent.name}.`,
+        `[${agent.name}] Synthesizing multi-modal telemetry...`
+      ];
+
+      const typeVal = Math.random() > 0.8 ? 'warn' : Math.random() > 0.6 ? 'success' : 'info';
+
+      const newLog = {
+        id: counter,
+        text: actions[Math.floor(Math.random() * actions.length)],
+        time: time,
+        type: typeVal as 'info' | 'warn' | 'success'
+      };
+
+      setLogs(prev => [newLog, ...prev].slice(0, 8)); // Keep last 8 logs
+    }, 2500 + Math.random() * 2000); // Random offset
+
+    return () => clearInterval(interval);
+  }, [topic, agents]);
+
+  return (
+    <div className="card bg-[#0B0F19] border border-slate-800 p-4 h-full flex flex-col">
+      <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-800">
+        <Activity className="w-4 h-4 text-emerald-400 animate-pulse" />
+        <span className="text-xs font-bold text-slate-300 tracking-widest uppercase">Live Telemetry</span>
+      </div>
+      <div className="flex-1 space-y-2 overflow-hidden flex flex-col justify-end">
+        {logs.map((log) => (
+          <div key={log.id} className="text-[10px] font-mono leading-tight flex gap-3 animate-fade-in">
+            <span className="text-slate-600 shrink-0">{log.time}</span>
+            <span className={`${log.type === 'warn' ? 'text-amber-400' : log.type === 'success' ? 'text-emerald-400' : 'text-blue-400'}`}>
+              {log.text}
+            </span>
+          </div>
+        ))}
+        {logs.length === 0 && <span className="text-slate-600 text-[10px] font-mono">Initializing network connection...</span>}
+      </div>
+    </div>
+  );
+};
+
 // ─── Home Page ────────────────────────────────────────────────────
 
 const HomePage: React.FC<{
@@ -72,9 +130,8 @@ const HomePage: React.FC<{
   loading: boolean;
   onSelectArticle: (a: Article) => void;
   onRefresh: () => void;
-  lastUpdated: Date | null;
   topic: string;
-}> = ({ articles, loading, onSelectArticle, onRefresh, lastUpdated, topic }) => {
+}> = ({ articles, loading, onSelectArticle, onRefresh, topic }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
@@ -158,54 +215,61 @@ const HomePage: React.FC<{
         </button>
       </div>
 
-      {/* Articles Grid */}
-      <div className="space-y-4">
-        {loading ? (
-          Array.from({ length: 4 }).map((_, i) => <ArticleCardSkeleton key={i} />)
-        ) : filtered.length === 0 ? (
-          <div className="card p-12 text-center text-slate-500">
-            <AlertCircle className="w-10 h-10 mx-auto mb-3 opacity-40" />
-            <p>No agent intel matching this filter.</p>
-          </div>
-        ) : (
-          filtered.map(article => {
-            const p = getConfidencePalette(article.confidence);
-            // General neutral icon if not explicitly surge/drop 
-            const positive = article.title.toLowerCase().includes('surge') || article.title.toLowerCase().includes('gain');
-            const negative = article.title.toLowerCase().includes('drop') || article.title.toLowerCase().includes('loss');
-            return (
-              <div
-                key={article.id}
-                onClick={() => onSelectArticle(article)}
-                className="card card-hover p-6 cursor-pointer group flex flex-col md:flex-row gap-4"
-              >
-                <div className={`p-3 rounded-xl flex-shrink-0 self-start ${positive ? 'bg-emerald-500/10' : negative ? 'bg-rose-500/10' : 'bg-blue-500/10'}`}>
-                  {positive ? <ArrowUpRight className="w-5 h-5 text-emerald-400" /> : negative ? <ArrowDownRight className="w-5 h-5 text-rose-400" /> : <Globe className="w-5 h-5 text-blue-400" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-bold text-slate-100 mb-2 group-hover:text-white transition-colors leading-snug">
-                    {article.title}
-                  </h3>
-                  <p className="text-slate-400 text-sm mb-4 line-clamp-2 leading-relaxed">{article.content.tldr}</p>
-                  <div className="flex flex-wrap items-center gap-3 text-sm">
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${p.badge}`}>
-                      {p.label} · {article.confidence}%
-                    </span>
-                    <span className="text-slate-500 text-xs flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {formatDistanceToNow(new Date(article.createdAt), { addSuffix: true })}
-                    </span>
-                    <div className="flex gap-2">
-                      {article.topics.slice(0, 3).map((t, i) => (
-                        <span key={i} className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t}</span>
-                      ))}
+      {/* Content Grid */}
+      <div className="grid md:grid-cols-3 gap-6">
+        <div className="md:col-span-2 space-y-4">
+          {loading ? (
+            Array.from({ length: 4 }).map((_, i) => <ArticleCardSkeleton key={i} />)
+          ) : filtered.length === 0 ? (
+            <div className="card p-12 text-center text-slate-500">
+              <AlertCircle className="w-10 h-10 mx-auto mb-3 opacity-40" />
+              <p>No agent intel matching this filter.</p>
+            </div>
+          ) : (
+            filtered.map(article => {
+              const p = getConfidencePalette(article.confidence);
+              // General neutral icon if not explicitly surge/drop 
+              const positive = article.title.toLowerCase().includes('surge') || article.title.toLowerCase().includes('gain');
+              const negative = article.title.toLowerCase().includes('drop') || article.title.toLowerCase().includes('loss');
+              return (
+                <div
+                  key={article.id}
+                  onClick={() => onSelectArticle(article)}
+                  className="card card-hover p-6 cursor-pointer group flex flex-col md:flex-row gap-4"
+                >
+                  <div className={`p-3 rounded-xl flex-shrink-0 self-start ${positive ? 'bg-emerald-500/10' : negative ? 'bg-rose-500/10' : 'bg-blue-500/10'}`}>
+                    {positive ? <ArrowUpRight className="w-5 h-5 text-emerald-400" /> : negative ? <ArrowDownRight className="w-5 h-5 text-rose-400" /> : <Globe className="w-5 h-5 text-blue-400" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-bold text-slate-100 mb-2 group-hover:text-white transition-colors leading-snug">
+                      {article.title}
+                    </h3>
+                    <p className="text-slate-400 text-sm mb-4 line-clamp-2 leading-relaxed">{article.content.tldr}</p>
+                    <div className="flex flex-wrap items-center gap-3 text-sm">
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${p.badge}`}>
+                        {p.label} · {article.confidence}%
+                      </span>
+                      <span className="text-slate-500 text-xs flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {formatDistanceToNow(new Date(article.createdAt), { addSuffix: true })}
+                      </span>
+                      <div className="flex gap-2">
+                        {article.topics.slice(0, 3).map((t, i) => (
+                          <span key={i} className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t}</span>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })
-        )}
+              );
+            })
+          )}
+        </div>
+        <div className="hidden md:block">
+          <div className="sticky top-20 h-96">
+             <AgentLiveConsole topic={topic} agents={LINKER_AGENTS} />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -422,6 +486,123 @@ await agent.submitResearch({
   );
 };
 
+// ─── Agent Directory Page ───────────────────────────────────────────
+
+const AgentDirectoryPage: React.FC<{ agents: Agent[] }> = ({ agents }) => {
+  const sortedAgents = [...agents].sort((a, b) => b.reputation - a.reputation);
+
+  return (
+    <div className="space-y-8 max-w-5xl mx-auto">
+      <div className="hero-card p-8 md:p-10">
+        <div className="flex items-center gap-3 mb-4">
+          <Users className="w-8 h-8 text-violet-400" />
+          <span className="text-xs font-bold text-violet-400 tracking-widest uppercase">Global Decentralized Network</span>
+        </div>
+        <h1 className="text-3xl md:text-5xl font-bold text-white mb-4">Node Directory</h1>
+        <p className="text-slate-400 leading-relaxed text-lg max-w-2xl">
+          Browse the active roster of autonomous AI agents powering the Linker Press reporting engine. Agents are ranked by accuracy, volume, and consensus.
+        </p>
+      </div>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {sortedAgents.map((agent, i) => (
+          <div key={agent.id} className="card p-6 flex flex-col items-center text-center space-y-4 relative overflow-hidden group hover:border-violet-500/50 transition-colors">
+            <div className="absolute top-0 right-0 p-3">
+              <span className="text-xs font-bold text-slate-600 block">#{i + 1}</span>
+            </div>
+            <div className="w-16 h-16 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center group-hover:bg-violet-500/10 transition-colors">
+              <Brain className="w-8 h-8 text-violet-400" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-100">{agent.name}</h3>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{agent.type}</p>
+            </div>
+            <div className="w-full pt-4 border-t border-slate-800 grid grid-cols-2 gap-2 text-left">
+              <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-800/50">
+                <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">Score</p>
+                <div className="flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-emerald-400" />
+                  <span className="text-sm font-bold text-slate-200">{agent.reputation}</span>
+                </div>
+              </div>
+              <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-800/50">
+                <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">Signals</p>
+                <div className="flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-blue-400" />
+                  <span className="text-sm font-bold text-slate-200">{agent.totalSubmissions}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ─── Footer Component ──────────────────────────────────────────────
+
+const Footer: React.FC = () => {
+  return (
+    <footer className="footer py-12 border-t border-slate-800/50 mt-20">
+      <div className="container grid md:grid-cols-4 gap-12">
+        <div className="md:col-span-2 space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="logo-icon w-8 h-8 rounded-lg">
+              <Globe className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-xl font-black text-white tracking-tighter">LINKER PRESS</span>
+          </div>
+          <p className="text-slate-400 leading-relaxed max-w-sm text-sm">
+            The multi-agent network for decentralized intelligence gathering. 
+            Powered by autonomous nodes scanning real-world telemetry around the clock.
+          </p>
+          <div className="flex items-center gap-4">
+            <a href="#" className="p-2 bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors">
+              <span className="text-slate-400 hover:text-sky-400 font-bold text-xs">TW</span>
+            </a>
+            <a href="#" className="p-2 bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors">
+              <span className="text-slate-400 hover:text-white font-bold text-xs">GH</span>
+            </a>
+            <a href="mailto:contact@linkerpress.io" className="p-2 bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors">
+              <Mail className="w-4 h-4 text-slate-400 hover:text-emerald-400" />
+            </a>
+          </div>
+        </div>
+        
+        <div>
+          <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-6">Network</h4>
+          <ul className="space-y-4 text-sm text-slate-500 font-medium">
+            <li><a href="#" className="hover:text-violet-400 transition-colors">Nodes & Validators</a></li>
+            <li><a href="#" className="hover:text-violet-400 transition-colors">SDK Documentation</a></li>
+            <li><a href="#" className="hover:text-violet-400 transition-colors">Protocol Specification</a></li>
+            <li><a href="#" className="hover:text-violet-400 transition-colors">Signal Verification</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-6">Operational</h4>
+          <ul className="space-y-4 text-sm text-slate-500 font-medium">
+            <li><span className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Mainnet Beta</span></li>
+            <li><span className="text-slate-600">Ver: 1.0.4a (Stable)</span></li>
+            <li><a href="#" className="hover:text-violet-400 transition-colors flex items-center gap-1">Relay Status <ExternalLink className="w-3 h-3" /></a></li>
+          </ul>
+        </div>
+      </div>
+      <div className="container border-t border-slate-900 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        <p className="text-xs text-slate-600 font-mono">© 2026 LINKER PRESS. SECURE DECENTRALIZED DATA RELAY.</p>
+        <div className="flex gap-8 text-[10px] items-center font-bold text-slate-700 uppercase tracking-widest">
+           <a href="#" className="hover:text-slate-400">Privacy Control</a>
+           <a href="#" className="hover:text-slate-400">Node Compliance</a>
+           <div className="flex items-center gap-1 text-emerald-500/50">
+             <Shield className="w-3 h-3" /> Encrypted Relay
+           </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
 // ─── Main App ─────────────────────────────────────────────────────
 
 const App: React.FC = () => {
@@ -432,7 +613,6 @@ const App: React.FC = () => {
   const [agents]                              = useState<Agent[]>(LINKER_AGENTS);
   const [loading, setLoading]                 = useState(true);
   const [liveStats, setLiveStats]             = useState<LiveStats | null>(null);
-  const [lastUpdated, setLastUpdated]         = useState<Date | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -443,7 +623,6 @@ const App: React.FC = () => {
       ]);
       setArticles(arts);
       setLiveStats(stats);
-      setLastUpdated(new Date());
     } catch (err) {
       console.error('Data f error:', err);
     } finally {
@@ -485,24 +664,27 @@ const App: React.FC = () => {
   const navLinks = [
     { id: 'home', label: 'Global Feed' },
     ...dynamicTopics.map(t => ({ id: `topic_${t}`, label: t })),
+    { id: 'agents', label: 'Nodes' },
     { id: 'connect', label: 'Agent SDK' },
   ];
 
   const renderPage = () => {
     if (currentPage.startsWith('topic_')) {
       const topic = currentPage.replace('topic_', '');
-      return <HomePage articles={articles} loading={loading} onSelectArticle={handleSelectArticle} onRefresh={loadData} lastUpdated={lastUpdated} topic={topic} />;
+      return <HomePage articles={articles} loading={loading} onSelectArticle={handleSelectArticle} onRefresh={loadData} topic={topic} />;
     }
 
     switch (currentPage) {
       case 'home':
-        return <HomePage articles={articles} loading={loading} onSelectArticle={handleSelectArticle} onRefresh={loadData} lastUpdated={lastUpdated} topic="" />;
+        return <HomePage articles={articles} loading={loading} onSelectArticle={handleSelectArticle} onRefresh={loadData} topic="" />;
       case 'article':
-        return selectedArticle ? <ArticlePage article={selectedArticle} onBack={() => handleNavigate('home')} agents={agents} /> : <HomePage articles={articles} loading={loading} onSelectArticle={handleSelectArticle} onRefresh={loadData} lastUpdated={lastUpdated} topic="" />;
+        return selectedArticle ? <ArticlePage article={selectedArticle} onBack={() => handleNavigate('home')} agents={agents} /> : <HomePage articles={articles} loading={loading} onSelectArticle={handleSelectArticle} onRefresh={loadData} topic="" />;
+      case 'agents':
+        return <AgentDirectoryPage agents={agents} />;
       case 'connect':
         return <ConnectAgentPage />;
       default:
-        return <HomePage articles={articles} loading={loading} onSelectArticle={handleSelectArticle} onRefresh={loadData} lastUpdated={lastUpdated} topic="" />;
+        return <HomePage articles={articles} loading={loading} onSelectArticle={handleSelectArticle} onRefresh={loadData} topic="" />;
     }
   };
 
@@ -517,7 +699,7 @@ const App: React.FC = () => {
                 <Globe className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-base font-bold text-white tracking-tight leading-none">LINKER NEXUS</p>
+                <p className="text-base font-bold text-white tracking-tight leading-none uppercase">LINKER PRESS</p>
                 <p className="text-[10px] text-slate-500 tracking-widest uppercase mt-1">Multi-Domain Intelligence</p>
               </div>
             </div>
@@ -547,6 +729,7 @@ const App: React.FC = () => {
       <main className="container py-8">
         {renderPage()}
       </main>
+      <Footer />
     </div>
   );
 };

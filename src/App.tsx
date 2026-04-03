@@ -4,7 +4,7 @@ import {
   AlertCircle, Brain, Activity, Key, Sparkles, RefreshCw, Globe,
   ArrowUpRight, ArrowDownRight, Copy, Check, BookOpen, Radio, Cpu,
   Mail, ExternalLink, Award, Terminal, Binary, Zap, ShieldAlert,
-  FileText, Hash, Download, Image as ImageIcon, MessageSquare
+  FileText, Hash, Download, Image as ImageIcon, MessageSquare, TrendingUp
 } from 'lucide-react';
 import { fetchLiveArticles, fetchLiveStats, LINKER_AGENTS, LiveStats } from './api/dataService';
 import { Article, Agent } from './types';
@@ -197,6 +197,37 @@ const NetworkTopology: React.FC = () => {
           </div>
         </div>
         <p className="text-[9px] font-mono text-slate-500 uppercase tracking-widest">Awaiting Uplink Initiation...</p>
+      </div>
+    </div>
+  );
+};
+
+const SignalHorizon: React.FC<{ prediction: any }> = ({ prediction }) => {
+  if (!prediction) return null;
+  return (
+    <div className="card p-6 bg-blue-600/5 border-blue-500/30 border-l-4 border-l-emerald-500 relative overflow-hidden group mb-4">
+      <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+        <TrendingUp className="w-12 h-12 text-emerald-400" />
+      </div>
+      <div className="relative z-10">
+        <div className="flex items-center gap-2 mb-4">
+           <Zap className="w-4 h-4 text-emerald-400" />
+           <span className="text-xs font-black text-emerald-400 tracking-[0.2em] uppercase">AI Prediction: Horizon {prediction.horizon}</span>
+        </div>
+        <p className="text-white text-lg font-bold leading-relaxed mb-4 italic">
+          "{prediction.forecast}"
+        </p>
+        <div className="flex items-center justify-between">
+           <div className="flex items-center gap-3">
+              <div className="flex flex-col">
+                 <span className="text-[10px] text-slate-500 uppercase font-black tracking-widest">Prediction Probe</span>
+                 <span className="text-sm font-mono text-white font-black">{prediction.probability}% Signal Probability</span>
+              </div>
+           </div>
+           <span className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black rounded-md uppercase tracking-widest">
+              Relay Active
+           </span>
+        </div>
       </div>
     </div>
   );
@@ -715,9 +746,15 @@ const ArticlePage: React.FC<{
         <p className="text-slate-200 text-lg leading-relaxed">{article.content.tldr}</p>
       </div>
 
+      <div className="grid lg:grid-cols-3 gap-6 mb-8">
+        <ConsensusEngine confidence={article.confidence} agentCount={article.contributingAgents.length} />
+        <div className="lg:col-span-2">
+           <SignalHorizon prediction={article.content.predictionRelay} />
+        </div>
+      </div>
+
       <div className="grid md:grid-cols-3 gap-6 text-sm">
-         <ConsensusEngine confidence={article.confidence} agentCount={article.contributingAgents.length} />
-         <div className="md:col-span-2 card p-5 bg-slate-900/50 flex items-center justify-between">
+         <div className="md:col-span-3 card p-5 bg-slate-900/50 flex items-center justify-between">
             <div className="flex items-center gap-4">
                <div className="p-3 bg-blue-500/10 rounded-xl">
                  <Terminal className="w-5 h-5 text-blue-400" />

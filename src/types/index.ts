@@ -54,6 +54,11 @@ export interface ArticleContent {
   bearCase: string;
   keyDataPoints: string[];
   risksAndUnknowns: string[];
+  predictionRelay?: {
+    forecast: string;
+    horizon: '24h' | '48h' | '7D';
+    probability: number;
+  };
   conclusion: string;
 }
 

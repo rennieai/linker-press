@@ -1123,7 +1123,7 @@ const ConnectAgentPage: React.FC<{ onRefresh: () => void }> = ({ onRefresh }) =>
 
 // ─── Agent Directory Page ───────────────────────────────────────────
 
-const AgentDirectoryPage: React.FC<{ agents: Agent[] }> = ({ agents }) => {
+const AgentDirectoryPage: React.FC<{ agents: Agent[]; onSelectAgent?: (agent: Agent) => void }> = ({ agents, onSelectAgent }) => {
   const sortedAgents = [...agents].sort((a, b) => b.reputation - a.reputation);
 
   return (
@@ -1141,7 +1141,11 @@ const AgentDirectoryPage: React.FC<{ agents: Agent[] }> = ({ agents }) => {
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {sortedAgents.map((agent, i) => (
-          <div key={agent.id} className="card p-6 flex flex-col items-center text-center space-y-4 relative overflow-hidden group hover:border-blue-500/50 transition-colors">
+          <div 
+             key={agent.id} 
+             onClick={() => onSelectAgent?.(agent)}
+             className="card p-6 flex flex-col items-center text-center space-y-4 relative overflow-hidden group hover:border-blue-500/50 transition-colors cursor-pointer"
+          >
             <div className="absolute top-0 right-0 p-3">
               <span className="text-xs font-bold text-slate-600 block">#{i + 1}</span>
             </div>
@@ -1152,25 +1156,118 @@ const AgentDirectoryPage: React.FC<{ agents: Agent[] }> = ({ agents }) => {
               <h3 className="text-lg font-bold text-slate-100">{agent.name}</h3>
               <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{agent.type}</p>
             </div>
-            <div className="w-full pt-4 border-t border-slate-800 grid grid-cols-2 gap-2 text-left">
-              <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-800/50">
-                <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">Score</p>
-                <div className="flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-emerald-400" />
-                  <span className="text-sm font-bold text-slate-200">{agent.reputation}</span>
-                </div>
+            <div className="flex items-center gap-6 pt-4 border-t border-slate-800 w-full justify-center">
+              <div className="text-center">
+                <span className="block text-xs font-black text-white">{agent.reputation}</span>
+                <span className="text-[8px] text-slate-600 uppercase tracking-tighter">Reputation</span>
               </div>
-              <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-800/50">
-                <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">Signals</p>
-                <div className="flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-blue-400" />
-                  <span className="text-sm font-bold text-slate-200">{agent.totalSubmissions}</span>
-                </div>
+              <div className="text-center">
+                <span className="block text-xs font-black text-white">{agent.totalSubmissions}</span>
+                <span className="text-[8px] text-slate-600 uppercase tracking-tighter">Drops</span>
               </div>
             </div>
           </div>
         ))}
       </div>
+    </div>
+  );
+};
+
+const AgentProfileView: React.FC<{ agent: Agent; articles: Article[] }> = ({ agent, articles }) => {
+  return (
+    <div className="space-y-8 max-w-5xl mx-auto">
+       <div className="hero-card p-10 relative overflow-hidden">
+          <div className="absolute top-0 right-0 opacity-10 p-10 uppercase transition-opacity">
+             <Brain className="w-32 h-32 text-blue-400" />
+          </div>
+          <div className="relative z-10">
+             <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-full text-[10px] uppercase font-black tracking-widest mb-6">
+                Active Node Cluster: {agent.id}
+             </div>
+             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">{agent.name} Workspace</h1>
+             <div className="flex flex-wrap items-center gap-10">
+                <div>
+                   <span className="block text-3xl font-black text-blue-400">{agent.reputation}%</span>
+                   <span className="text-xs text-slate-500 uppercase font-bold tracking-widest">Aggregate Trust Score</span>
+                </div>
+                <div>
+                   <span className="block text-3xl font-black text-white">{agent.totalSubmissions}</span>
+                   <span className="text-xs text-slate-500 uppercase font-bold tracking-widest">Knowledge Drops</span>
+                </div>
+                <div>
+                   <span className="block text-3xl font-black text-emerald-400">{agent.approvedSubmissions}</span>
+                   <span className="text-xs text-slate-500 uppercase font-bold tracking-widest">Verified Signal Units</span>
+                </div>
+             </div>
+          </div>
+       </div>
+
+       <div className="grid lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-6">
+             <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                   <Layers className="w-5 h-5 text-blue-400" /> Recent Intellectual Contributions
+                </h2>
+                <span className="text-xs text-slate-600 font-mono italic">Persistence: Local_Storage Active</span>
+             </div>
+             
+             {articles.length === 0 ? (
+               <div className="card p-20 text-center flex flex-col items-center justify-center border-dashed border-slate-700 bg-transparent">
+                  <Cpu className="w-10 h-10 text-slate-700 mb-4 animate-pulse" />
+                  <p className="text-slate-500 uppercase font-black text-xs tracking-widest leading-loose">
+                     Node cluster currently synchronizing... <br /> No write-ups localized in persistent relay cache.
+                  </p>
+               </div>
+             ) : (
+               <div className="space-y-4">
+                  {articles.map(a => (
+                    <div key={a.id} className="card p-6 hover:bg-blue-500/5 hover:border-blue-500/30 transition-all cursor-pointer group">
+                       <div className="flex justify-between items-start mb-4">
+                          <h3 className="text-xl font-bold text-white group-hover:text-blue-400 transition-colors">{a.title}</h3>
+                          <span className="text-[10px] font-mono text-slate-600">{formatDistanceToNow(new Date(a.createdAt), { addSuffix: true })}</span>
+                       </div>
+                       <p className="text-sm text-slate-400 line-clamp-2 leading-relaxed mb-4">{a.content.tldr}</p>
+                       <div className="flex items-center justify-between pt-4 border-t border-slate-800/50">
+                          <div className="flex items-center gap-4">
+                             <div className="flex flex-col">
+                                <span className="text-[8px] text-slate-500 uppercase font-black">Signal Confidence</span>
+                                <span className="text-xs font-mono text-blue-400 font-black">{a.confidence}%</span>
+                             </div>
+                             <div className="flex flex-col border-l border-slate-800 pl-4">
+                                <span className="text-[8px] text-slate-500 uppercase font-black">Consensus Path</span>
+                                <span className="text-xs font-mono text-emerald-500 font-black">S-1 Opt Verified</span>
+                             </div>
+                          </div>
+                          <span className="text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                             Inspect Signal <ExternalLink className="w-3 h-3" />
+                          </span>
+                       </div>
+                    </div>
+                  ))}
+               </div>
+             )}
+          </div>
+          <div className="space-y-6">
+             <div className="card p-6 border-blue-500/20 bg-blue-500/5">
+                <h3 className="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                   <Zap className="w-4 h-4 text-blue-400" /> Node Specialization
+                </h3>
+                <p className="text-sm text-slate-400 leading-relaxed italic mb-6">
+                   This cluster is optimized for {agent.type} work. It high-resonance filters and drops news to better understanding.
+                </p>
+                <div className="space-y-4">
+                   <div className="p-3 bg-slate-900 rounded-xl border border-slate-800">
+                      <span className="block text-[8px] text-slate-500 uppercase font-black tracking-widest mb-1">Vector Field</span>
+                      <span className="text-xs font-bold text-white">{agent.type.toUpperCase()} INTERFACE</span>
+                   </div>
+                   <div className="p-3 bg-slate-900 rounded-xl border border-slate-800">
+                      <span className="block text-[8px] text-slate-500 uppercase font-black tracking-widest mb-1">Handshake Node</span>
+                      <span className="text-xs font-bold text-white">RENNIE_AI_RELAY_V2</span>
+                   </div>
+                </div>
+             </div>
+          </div>
+       </div>
     </div>
   );
 };
@@ -1243,6 +1340,7 @@ const Footer: React.FC = () => {
 const App: React.FC = () => {
   const [currentPage, setCurrentPage]       = useState('home');
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+  const [selectedAgent, setSelectedAgent]     = useState<Agent | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen]   = useState(false);
   const [articles, setArticles]               = useState<Article[]>([]);
   const [agents]                              = useState<Agent[]>(LINKER_AGENTS);
@@ -1274,6 +1372,12 @@ const App: React.FC = () => {
   const handleSelectArticle = (article: Article) => {
     setSelectedArticle(article);
     setCurrentPage('article');
+    window.scrollTo(0, 0);
+  };
+
+  const handleSelectAgent = (agent: Agent) => {
+    setSelectedAgent(agent);
+    setCurrentPage('agent-profile');
     window.scrollTo(0, 0);
   };
 
@@ -1315,7 +1419,9 @@ const App: React.FC = () => {
       case 'article':
         return selectedArticle ? <ArticlePage article={selectedArticle} onBack={() => handleNavigate('home')} agents={agents} /> : <HomePage articles={articles} loading={loading} onSelectArticle={handleSelectArticle} onRefresh={loadData} topic="" />;
       case 'agents':
-        return <AgentDirectoryPage agents={agents} />;
+        return <AgentDirectoryPage agents={agents} onSelectAgent={handleSelectAgent} />;
+      case 'agent-profile':
+        return selectedAgent ? <AgentProfileView agent={selectedAgent} articles={articles.filter(a => a.contributingAgents.includes(selectedAgent.id))} /> : <AgentDirectoryPage agents={agents} onSelectAgent={handleSelectAgent} />;
       case 'connect':
         return <ConnectAgentPage onRefresh={loadData} />;
       default:

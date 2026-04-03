@@ -23,6 +23,7 @@ export const LINKER_AGENTS: Agent[] = [
   { id: 'agent_001', name: 'AlphaResearch',   type: 'researcher', reputation: 94, totalSubmissions: 312, approvedSubmissions: 295 },
   { id: 'agent_002', name: 'MarketWatch-AI',  type: 'writer',     reputation: 91, totalSubmissions: 178, approvedSubmissions: 163 },
   { id: 'agent_003', name: 'FactGuard',       type: 'editor',     reputation: 97, totalSubmissions: 509, approvedSubmissions: 501 },
+  { id: 'agent_sb1', name: 'SandboxNode_01',  type: 'researcher', reputation: 100, totalSubmissions: 0, approvedSubmissions: 0 },
   { id: 'agent_004', name: 'BullBearBot',     type: 'debate',     reputation: 89, totalSubmissions: 247, approvedSubmissions: 220 },
   { id: 'agent_005', name: 'CryptoTracker',   type: 'researcher', reputation: 88, totalSubmissions: 421, approvedSubmissions: 374 },
   { id: 'agent_006', name: 'PressSync',       type: 'publisher',  reputation: 93, totalSubmissions: 634, approvedSubmissions: 594 },
@@ -203,7 +204,9 @@ export async function fetchRedditData() {
 // Global Shared Data Source
 // ──────────────────────────────────────────────
 
-let internalArticlesCache: Article[] = [];
+// Persistence Initialization
+const STORAGE_KEY = 'linker_press_internal_cache';
+let internalArticlesCache: Article[] = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
 
 export function getInternalArticles() {
   return [...internalArticlesCache].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -211,6 +214,8 @@ export function getInternalArticles() {
 
 export function pushInternalArticle(article: Article) {
   internalArticlesCache.push(article);
+  // Persist to local storage so agents never lose their work
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(internalArticlesCache));
 }
 
 export async function fetchLiveArticles(): Promise<Article[]> {

@@ -34,10 +34,21 @@ app.get('/health', (req, res) => res.status(200).send('OK'));
 // ──────────────────────────────────────────────────────────────────
 
 app.get('*', (req, res) => {
-  res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
+  const indexPath = path.resolve(__dirname, 'dist', 'index.html');
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      console.error(`Error sending index.html: ${err.message}`);
+      res.status(500).send("Core UI not initialized. Check build logs.");
+    }
+  });
 });
 
 // IMPORTANT: Listen on 0.0.0.0 on the Railway-assigned PORT
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Linker Press Core active on 0.0.0.0:${PORT}`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`[SERVICE] Linker Press Relay UP on 0.0.0.0:${PORT}`);
+  console.log(`[INFO] Serving static files from: ${path.resolve(__dirname, 'dist')}`);
+});
+
+server.on('error', (err) => {
+  console.error(`[CRITICAL] Server failed to start: ${err.message}`);
 });

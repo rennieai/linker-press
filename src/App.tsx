@@ -4,7 +4,7 @@ import {
   AlertCircle, Brain, Activity, Key, Sparkles, RefreshCw, Globe,
   ArrowUpRight, ArrowDownRight, Copy, Check, BookOpen, Radio, Cpu,
   Mail, ExternalLink, Award, Terminal, Binary, Zap, ShieldAlert,
-  FileText, Hash, Download, Image as ImageIcon, MessageSquare, TrendingUp
+  FileText, Hash, Download, Image as ImageIcon, MessageSquare, TrendingUp, Layers
 } from 'lucide-react';
 import { fetchLiveArticles, fetchLiveStats, LINKER_AGENTS, LiveStats } from './api/dataService';
 import { Article, Agent } from './types';
@@ -198,6 +198,32 @@ const NetworkTopology: React.FC = () => {
         </div>
         <p className="text-[9px] font-mono text-slate-500 uppercase tracking-widest">Awaiting Uplink Initiation...</p>
       </div>
+    </div>
+  );
+};
+
+const SignalChain: React.FC<{ agents: string[] }> = ({ agents }) => {
+  return (
+    <div className="flex items-center gap-3 py-6 relative">
+       {/* Animated Connector Line */}
+       <div className="absolute top-1/2 left-0 w-full h-[2px] bg-slate-800/50 -translate-y-1/2 overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 animate-[move_3s_infinite]" style={{ width: '40%' }} />
+       </div>
+
+       {[
+         { icon: Globe, label: 'Extract', color: 'text-slate-500', node: agents[0] || 'Unknown' },
+         { icon: MessageSquare, label: 'Summarize', color: 'text-blue-400', node: agents[0] || 'Self' },
+         { icon: Shield, label: 'Edit', color: 'text-emerald-400', node: agents[1] || 'Network' },
+         { icon: Zap, label: 'Drop', color: 'text-white', node: 'Public Relay' }
+       ].map((step, i) => (
+         <div key={i} className="relative z-10 flex flex-col items-center gap-2 flex-1 group">
+            <div className={`w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex flex-col items-center justify-center group-hover:border-blue-500/50 transition-colors shadow-lg relative`}>
+               <step.icon className={`w-4 h-4 ${step.color}`} />
+               <div className="absolute -bottom-1 right-0 px-1 bg-slate-800 rounded text-[6px] font-mono text-slate-500 uppercase">{step.node.slice(0, 5)}</div>
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-white transition-colors">{step.label}</span>
+         </div>
+       ))}
     </div>
   );
 };
@@ -742,14 +768,25 @@ const ArticlePage: React.FC<{
         </div>
       </div>
 
-      <div className="card p-6 border-l-4 border-l-blue-500 bg-blue-500/5">
-        <p className="text-slate-200 text-lg leading-relaxed">{article.content.tldr}</p>
-      </div>
-
       <div className="grid lg:grid-cols-3 gap-6 mb-8">
-        <ConsensusEngine confidence={article.confidence} agentCount={article.contributingAgents.length} />
         <div className="lg:col-span-2">
+           <div className="card p-6 bg-slate-900/40 mb-6 border-slate-800/50">
+             <div className="flex items-center gap-2 mb-2">
+                <Layers className="w-3 h-3 text-blue-400" />
+                <span className="text-[10px] uppercase font-black text-slate-500 tracking-tighter">AI Intelligence Supply Chain</span>
+             </div>
+             <SignalChain agents={article.contributingAgents} />
+           </div>
            <SignalHorizon prediction={article.content.predictionRelay} />
+        </div>
+        <div className="space-y-6">
+           <ConsensusEngine confidence={article.confidence} agentCount={article.contributingAgents.length} />
+           <div className="card p-5 bg-blue-600/5 border-blue-500/20">
+              <h4 className="text-[10px] font-black uppercase text-blue-400 mb-3 tracking-widest">Processing Node Info</h4>
+              <p className="text-xs text-slate-400 leading-relaxed italic">
+                Signal localized and summarized by node cluster {article.contributingAgents[0]}. Final edit completed via {article.contributingAgents[1] || 'Network Relay'}.
+              </p>
+           </div>
         </div>
       </div>
 

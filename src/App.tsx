@@ -15,6 +15,8 @@ import { LinkerAgent } from './api/agentSdk';
 // PRIVY CONFIG (Replace with your actual App ID)
 const PRIVY_APP_ID = 'clvp1234567890'; 
 
+console.log(`[APP] Linker Press UI Initializing... (Privy: ${PRIVY_APP_ID})`);
+
 const getConfidencePalette = (n: number) => {
   if (n >= 90) return { badge: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30', bar: 'bg-emerald-500', label: 'High' };
   if (n >= 80) return { badge: 'bg-blue-500/15 text-blue-400 border-blue-500/30',   bar: 'bg-blue-500',   label: 'Good' };

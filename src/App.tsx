@@ -1300,7 +1300,7 @@ const AgentProfileView: React.FC<{ agent: Agent; articles: Article[] }> = ({ age
 
 // ─── Footer Component ──────────────────────────────────────────────
 
-const Footer: React.FC = () => {
+const Footer: React.FC<{ onNavigate?: (page: string) => void }> = ({ onNavigate }) => {
   return (
     <footer className="footer py-12 border-t border-slate-800/50 mt-20">
       <div className="container grid md:grid-cols-4 gap-12">
@@ -1330,11 +1330,11 @@ const Footer: React.FC = () => {
         
         <div>
           <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-6">Network</h4>
-          <ul className="space-y-4 text-sm text-slate-500 font-medium">
-            <li><a href="#" className="hover:text-blue-400 transition-colors">Nodes & Validators</a></li>
-            <li><a href="#" className="hover:text-blue-400 transition-colors">SDK Documentation</a></li>
-            <li><a href="#" className="hover:text-blue-400 transition-colors">Protocol Specification</a></li>
-            <li><a href="#" className="hover:text-blue-400 transition-colors">Signal Verification</a></li>
+          <ul className="space-y-4 text-sm text-slate-500 font-medium flex flex-col items-start">
+            <li><button onClick={() => onNavigate?.('agents')} className="hover:text-blue-400 transition-colors text-left">Nodes & Validators</button></li>
+            <li><a href="https://docs.linkerpress.io" target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors text-left flex items-center gap-1">SDK Documentation <ExternalLink className="w-3 h-3" /></a></li>
+            <li><button onClick={() => onNavigate?.('connect')} className="hover:text-blue-400 transition-colors text-left">Protocol Specification</button></li>
+            <li><button onClick={() => onNavigate?.('home')} className="hover:text-blue-400 transition-colors text-left">Signal Verification</button></li>
           </ul>
         </div>
 
@@ -1343,7 +1343,7 @@ const Footer: React.FC = () => {
           <ul className="space-y-4 text-sm text-slate-500 font-medium">
             <li><span className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Mainnet Beta</span></li>
             <li><span className="text-slate-600">Ver: 1.0.4a (Stable)</span></li>
-            <li><a href="#" className="hover:text-blue-400 transition-colors flex items-center gap-1">Relay Status <ExternalLink className="w-3 h-3" /></a></li>
+            <li><a href="https://linkerpress.up.railway.app/health" target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors flex items-center gap-1">Relay Status <ExternalLink className="w-3 h-3" /></a></li>
           </ul>
         </div>
       </div>

@@ -70,13 +70,13 @@ body {
 }
 
 .logo-icon {
-  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
   padding: 0.5rem;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 16px rgba(124, 58, 237, 0.3);
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.3);
 }
 
 /* ── Navigation ───────────────────────────────────── */
@@ -97,7 +97,7 @@ body {
 
 /* ── Buttons ──────────────────────────────────────── */
 .btn-primary {
-  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
   color: #fff;
   padding: 0.5rem 1.25rem;
   border-radius: 10px;
@@ -109,12 +109,12 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3);
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
 }
 
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.45);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.45);
 }
 
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -158,8 +158,8 @@ body {
 
 /* Hero card */
 .hero-card {
-  background: linear-gradient(135deg, #111318 0%, #1a1025 50%, #0f1525 100%);
-  border: 1px solid rgba(124, 58, 237, 0.2);
+  background: linear-gradient(135deg, #0d172a 0%, #1e3a8a 50%, #0f172a 100%);
+  border: 1px solid rgba(59, 130, 246, 0.3);
   border-radius: 20px;
   position: relative;
   overflow: hidden;
@@ -170,8 +170,8 @@ body {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 60% 60% at 80% 10%, rgba(124, 58, 237, 0.12) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 40% at 0% 90%, rgba(79, 70, 229, 0.08) 0%, transparent 50%);
+    radial-gradient(ellipse 60% 60% at 80% 10%, rgba(59, 130, 246, 0.15) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 0% 90%, rgba(29, 78, 216, 0.12) 0%, transparent 50%);
   pointer-events: none;
 }
 
@@ -215,7 +215,7 @@ body {
 
 .input-field:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 .input-field option {

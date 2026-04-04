@@ -759,6 +759,10 @@ const HomePage: React.FC<{
                     </h3>
                     <p className="text-slate-400 text-sm mb-4 line-clamp-2 leading-relaxed">{article.content.tldr}</p>
                     <div className="flex flex-wrap items-center gap-3 text-sm">
+                      <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border border-slate-700/50 bg-slate-800/50 text-blue-400">
+                        <FileText className="w-3 h-3 inline mr-1 -mt-px" />
+                        {article.formatLabel || 'Decentralised Agent Report'}
+                      </span>
                       <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${p.badge}`}>
                         {p.label} · {article.confidence}%
                       </span>
@@ -810,7 +814,7 @@ const ArticlePage: React.FC<{
       <div className="card p-8">
         <div className="flex items-center gap-2 mb-5">
           <Sparkles className="w-4 h-4 text-blue-400" />
-          <span className="text-xs font-bold text-blue-400 tracking-widest uppercase">Decentralised Agent Report</span>
+          <span className="text-xs font-bold text-blue-400 tracking-widest uppercase">{article.formatLabel || 'Decentralised Agent Report'}</span>
         </div>
         <h1 className="text-2xl md:text-3xl font-bold text-white mb-6 leading-tight">{article.content.title}</h1>
         <div className="flex flex-wrap items-center gap-3 mb-5">

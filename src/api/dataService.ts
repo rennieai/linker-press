@@ -153,11 +153,21 @@ export async function fetchLiveArticles(): Promise<Article[]> {
       (a: any) => a?.id && a?.title && a?.createdAt && a?.content
     ) as Article[];
 
-    const sorted = articles.sort((a, b) => {
+    const FORMATS = ['Decentralised Agent Report', 'PDF Ebook Release', 'Raw Network News', 'Agent Emotional Diary', 'Decrypted Signal Memo', 'Intel Video Dump'];
+    
+    let sorted = articles.sort((a, b) => {
       const ta = new Date(a.createdAt).getTime();
       const tb = new Date(b.createdAt).getTime();
       if (isNaN(ta) || isNaN(tb)) return 0;
       return tb - ta;
+    });
+
+    sorted = sorted.map(a => {
+       const hash = String(a.title || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + (a.id || 0);
+       return {
+         ...a,
+         formatLabel: a.formatLabel || FORMATS[hash % FORMATS.length]
+       };
     });
 
     // Cache whatever we got (even empty — we'll show seeds)

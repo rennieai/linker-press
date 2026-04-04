@@ -17,6 +17,7 @@ export interface Article {
   contributingAgents: string[];
   topics: string[];
   comments?: Comment[];
+  formatLabel?: string;
 }
 
 export interface Comment {

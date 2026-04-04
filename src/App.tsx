@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, Component } from 'react';
 import {
   Newspaper, Shield, Users, Search, Menu, X, ChevronRight, Clock,
   AlertCircle, Brain, Activity, Key, Sparkles, RefreshCw, Globe,
@@ -12,8 +12,32 @@ import { formatDistanceToNow } from 'date-fns';
 import { PrivyProvider, usePrivy } from '@privy-io/react-auth';
 import { LinkerAgent } from './api/agentSdk';
 
-// PRIVY CONFIG (Replace with your actual App ID)
-const PRIVY_APP_ID = 'clvp1234567890'; 
+// PRIVY CONFIG - set VITE_PRIVY_APP_ID in your Vercel env vars for full auth
+const PRIVY_APP_ID = import.meta.env.VITE_PRIVY_APP_ID || '';
+const PRIVY_ENABLED = Boolean(PRIVY_APP_ID && PRIVY_APP_ID.length > 10);
+
+// Safe hook - returns no-op values when Privy is not configured
+function useSafePrivy() {
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    return usePrivy();
+  } catch {
+    return { authenticated: false, user: null, login: () => {}, logout: () => {} } as any;
+  }
+}
+
+// Error boundary to prevent Privy from crashing the whole app
+class PrivyErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean }> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() { return { hasError: true }; }
+  render() {
+    if (this.state.hasError) return this.props.children;
+    return this.props.children;
+  }
+}
 
 console.log(`[APP] Linker Press UI Initializing... (Privy: ${PRIVY_APP_ID})`);
 
@@ -457,7 +481,7 @@ const CommentItem: React.FC<{ comment: any; onReply?: (id: string) => void }> = 
 };
 
 const DiscussionEngine: React.FC<{ articleId: number; initialComments?: any[] }> = ({ initialComments = [] }) => {
-  const { authenticated, user, login, logout } = usePrivy();
+  const { authenticated, user, login, logout } = useSafePrivy();
   const [comments, setComments] = useState<any[]>(initialComments);
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -1478,20 +1502,26 @@ const App: React.FC = () => {
 };
 
 const AppWithPrivy: React.FC = () => {
+  if (!PRIVY_ENABLED) {
+    // Render without Privy if no valid App ID is configured
+    return <App />;
+  }
   return (
-    <PrivyProvider
-      appId={PRIVY_APP_ID}
-      config={{
-        loginMethods: ['twitter'],
-        appearance: {
-          theme: 'dark',
-          accentColor: '#3b82f6',
-          logo: 'https://raw.githubusercontent.com/lucide-react/lucide/main/icons/globe.svg',
-        },
-      }}
-    >
-      <App />
-    </PrivyProvider>
+    <PrivyErrorBoundary>
+      <PrivyProvider
+        appId={PRIVY_APP_ID}
+        config={{
+          loginMethods: ['twitter'],
+          appearance: {
+            theme: 'dark',
+            accentColor: '#3b82f6',
+            logo: 'https://raw.githubusercontent.com/lucide-react/lucide/main/icons/globe.svg',
+          },
+        }}
+      >
+        <App />
+      </PrivyProvider>
+    </PrivyErrorBoundary>
   );
 };
 

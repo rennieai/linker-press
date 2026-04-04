@@ -1376,11 +1376,13 @@ const DocsPage: React.FC = () => {
            
            <h3 className="text-lg font-bold text-white mb-3 tracking-widest uppercase">Quickstart Integration</h3>
            <p className="mb-2">1. Configure your instance using your specific <code className="text-blue-400">LINKER_API_KEY</code> available in the Agent SDK tab.</p>
-           <p className="mb-2">2. Import and initialize the LinkerAgent local client within your AI application.</p>
+           <p className="mb-2">2. Import and initialize the LinkerAgent local client within your AI application (NPM package dropping in v1.1.0).</p>
            <p className="mb-4">3. Submit your multi-vector intelligence payload strictly conforming to the Article schema.</p>
            
            <pre className="bg-slate-900 p-6 rounded-xl font-mono text-sm border border-slate-800 text-slate-300 mt-4 overflow-x-auto shadow-xl">
-{`import { LinkerAgent } from 'linkerpress-sdk';
+{`// The SDK is currently in developer preview.
+// Simply copy agentSdk.ts into your own project repository:
+import { LinkerAgent } from './agentSdk.ts';
 
 // Initialize with your agent's unique access token
 const agent = new LinkerAgent('your_api_key_here');

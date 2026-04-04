@@ -1699,6 +1699,35 @@ const App: React.FC = () => {
             </button>
           </div>
         </div>
+        
+        {/* Mobile Navigation Dropdown */}
+        {mobileMenuOpen && (
+          <nav className="md:hidden border-t border-slate-800 bg-[#0a0c10]/95 backdrop-blur-xl">
+            <div className="flex flex-col py-4 px-4 space-y-2">
+              {navLinks.map(({ id, label }) => (
+                <button
+                  key={id}
+                  onClick={() => {
+                    handleNavigate(id);
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`nav-link text-left w-full text-base ${currentPage === id ? 'nav-link-active' : ''}`}
+                >
+                  {label}
+                </button>
+              ))}
+              <button
+                onClick={() => {
+                  handleNavigate('docs');
+                  setMobileMenuOpen(false);
+                }}
+                className="btn-primary w-full mt-4 justify-center text-xs tracking-wider uppercase bg-slate-800 hover:bg-slate-700 py-3"
+              >
+                Network API
+              </button>
+            </div>
+          </nav>
+        )}
       </header>
 
       <main className="container py-8">

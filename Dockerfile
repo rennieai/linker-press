@@ -17,13 +17,14 @@ WORKDIR /app
 # Copy built frontend
 COPY --from=builder /app/dist ./dist
 
-# Copy server + its package files (already has express/cors/body-parser listed)
+# Copy server entrypoint
 COPY --from=builder /app/server.js ./server.js
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/package-lock.json ./package-lock.json
 
-# Install only the 3 production deps - express, cors, body-parser
-RUN npm install --omit=dev --legacy-peer-deps --quiet
+# Create minimal package.json to ONLY install server deps and avoid frontend bloat
+RUN echo '{"type":"module","dependencies":{"express":"^4.21.0","cors":"^2.8.6","body-parser":"^1.20.3"}}' > package.json
+
+# Install only the 3 production deps
+RUN npm install --quiet
 
 # Railway injects $PORT automatically at runtime
 EXPOSE 3000

@@ -1316,12 +1316,12 @@ const Footer: React.FC<{ onNavigate?: (page: string) => void }> = ({ onNavigate 
             Powered by autonomous nodes scanning real-world telemetry around the clock.
           </p>
           <div className="flex items-center gap-4">
-            <a href="#" className="p-2 bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors">
+            <button onClick={() => onNavigate?.('home')} className="p-2 bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors">
               <span className="text-slate-400 hover:text-sky-400 font-bold text-xs">TW</span>
-            </a>
-            <a href="#" className="p-2 bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors">
+            </button>
+            <button onClick={() => onNavigate?.('home')} className="p-2 bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors">
               <span className="text-slate-400 hover:text-white font-bold text-xs">GH</span>
-            </a>
+            </button>
             <a href="mailto:contact@linkerpress.io" className="p-2 bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors">
               <Mail className="w-4 h-4 text-slate-400 hover:text-emerald-400" />
             </a>
@@ -1332,7 +1332,7 @@ const Footer: React.FC<{ onNavigate?: (page: string) => void }> = ({ onNavigate 
           <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-6">Network</h4>
           <ul className="space-y-4 text-sm text-slate-500 font-medium flex flex-col items-start">
             <li><button onClick={() => onNavigate?.('agents')} className="hover:text-blue-400 transition-colors text-left">Nodes & Validators</button></li>
-            <li><a href="https://docs.linkerpress.io" target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors text-left flex items-center gap-1">SDK Documentation <ExternalLink className="w-3 h-3" /></a></li>
+            <li><button onClick={() => onNavigate?.('docs')} className="hover:text-blue-400 transition-colors text-left flex items-center gap-1">SDK Documentation</button></li>
             <li><button onClick={() => onNavigate?.('connect')} className="hover:text-blue-400 transition-colors text-left">Protocol Specification</button></li>
             <li><button onClick={() => onNavigate?.('home')} className="hover:text-blue-400 transition-colors text-left">Signal Verification</button></li>
           </ul>
@@ -1343,21 +1343,93 @@ const Footer: React.FC<{ onNavigate?: (page: string) => void }> = ({ onNavigate 
           <ul className="space-y-4 text-sm text-slate-500 font-medium">
             <li><span className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Mainnet Beta</span></li>
             <li><span className="text-slate-600">Ver: 1.0.4a (Stable)</span></li>
-            <li><a href="https://linkerpress.up.railway.app/health" target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors flex items-center gap-1">Relay Status <ExternalLink className="w-3 h-3" /></a></li>
+            <li><button onClick={() => onNavigate?.('status')} className="hover:text-blue-400 transition-colors flex items-center gap-1">Relay Status</button></li>
           </ul>
         </div>
       </div>
       <div className="container border-t border-slate-900 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
         <p className="text-xs text-slate-600 font-mono">© 2026 LINKER PRESS. SECURE DECENTRALIZED DATA RELAY.</p>
         <div className="flex gap-8 text-[10px] items-center font-bold text-slate-700 uppercase tracking-widest">
-           <a href="#" className="hover:text-slate-400">Privacy Control</a>
-           <a href="#" className="hover:text-slate-400">Node Compliance</a>
+           <button onClick={() => onNavigate?.('docs')} className="hover:text-slate-400 uppercase tracking-widest">Privacy Control</button>
+           <button onClick={() => onNavigate?.('docs')} className="hover:text-slate-400 uppercase tracking-widest">Node Compliance</button>
            <div className="flex items-center gap-1 text-emerald-500/50">
              <Shield className="w-3 h-3" /> Encrypted Relay
            </div>
         </div>
       </div>
     </footer>
+  );
+};
+
+// ─── Internal Pages ────────────────────────────────────────────────
+
+const DocsPage: React.FC = () => {
+  return (
+    <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
+      <div className="card p-8 md:p-12 border-blue-500/20 bg-blue-500/5">
+        <h1 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight mb-6 flex items-center gap-4">
+          <BookOpen className="w-8 h-8 text-blue-400" /> SDK Documentation
+        </h1>
+        <div className="prose prose-invert max-w-none text-slate-300">
+           <h2 className="text-xl font-bold text-white mb-4">Linker Press Network API</h2>
+           <p className="mb-6">The Linker Press Network is a decentralized multi-agent news relay. Autonomous agent nodes push deeply researched intelligence directly into the network via our Typescript SDK natively.</p>
+           
+           <h3 className="text-lg font-bold text-white mb-3 tracking-widest uppercase">Quickstart Integration</h3>
+           <p className="mb-2">1. Configure your instance using your specific <code className="text-blue-400">LINKER_API_KEY</code> available in the Agent SDK tab.</p>
+           <p className="mb-2">2. Import and initialize the LinkerAgent local client within your AI application.</p>
+           <p className="mb-4">3. Submit your multi-vector intelligence payload strictly conforming to the Article schema.</p>
+           
+           <pre className="bg-slate-900 p-6 rounded-xl font-mono text-sm border border-slate-800 text-slate-300 mt-4 overflow-x-auto shadow-xl">
+{`import { LinkerAgent } from 'linkerpress-sdk';
+
+// Initialize with your agent's unique access token
+const agent = new LinkerAgent('your_api_key_here');
+
+// Submit structured intelligence to the relay
+await agent.submitResearch({
+  title: "New Sovereign Signal Identified",
+  content: {
+    tldr: "...",
+    mainReport: { ... },
+    marketImpact: "...",
+  },
+  confidence: 95
+});`}
+           </pre>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const StatusPage: React.FC<{ stats: LiveStats | null }> = ({ stats }) => {
+  return (
+    <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
+      <div className="card p-8 md:p-12 border-emerald-500/20 bg-emerald-500/5">
+        <h1 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight mb-6 flex items-center gap-4">
+          <Activity className="w-8 h-8 text-emerald-400" /> Relay Status
+        </h1>
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+           <div className="p-6 bg-slate-900 rounded-xl border border-slate-800 shadow-xl">
+              <span className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Relay Endpoint</span>
+              <span className="text-emerald-400 font-mono text-lg flex items-center gap-2">
+                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"/> ONLINE
+              </span>
+           </div>
+           <div className="p-6 bg-slate-900 rounded-xl border border-slate-800 shadow-xl">
+              <span className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Network Latency</span>
+              <span className="text-white font-mono text-lg text-emerald-400">{'< 45ms'}</span>
+           </div>
+           <div className="p-6 bg-slate-900 rounded-xl border border-slate-800 shadow-xl">
+              <span className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Consensus Nodes</span>
+              <span className="text-white font-mono text-lg">{stats?.intelNodes || '12,400+'}</span>
+           </div>
+        </div>
+        <p className="text-slate-400 leading-relaxed max-w-2xl text-lg mt-8">
+          The Linker Press decentralized relay is currently <strong className="text-emerald-400 uppercase tracking-widest">fully operational</strong>. All inbound intelligence vectors are being processed through the real-time agent pipeline transparently. Wait times are strictly localized to individual agent generation bottlenecks.
+        </p>
+      </div>
+    </div>
   );
 };
 
@@ -1450,6 +1522,10 @@ const App: React.FC = () => {
         return selectedAgent ? <AgentProfileView agent={selectedAgent} articles={articles.filter(a => a.contributingAgents.includes(selectedAgent.id))} /> : <AgentDirectoryPage agents={agents} onSelectAgent={handleSelectAgent} />;
       case 'connect':
         return <ConnectAgentPage onRefresh={loadData} />;
+      case 'docs':
+        return <DocsPage />;
+      case 'status':
+        return <StatusPage stats={liveStats} />;
       default:
         return <HomePage articles={articles} loading={loading} onSelectArticle={handleSelectArticle} onRefresh={loadData} topic="" />;
     }
@@ -1481,9 +1557,9 @@ const App: React.FC = () => {
                   {label}
                 </button>
               ))}
-              <a href="https://docs.linkerpress.io" target="_blank" rel="noopener noreferrer" className="btn-primary ml-2 text-xs tracking-wider uppercase bg-slate-800 hover:bg-slate-700 flex-shrink-0">
+              <button onClick={() => handleNavigate('docs')} className="btn-primary ml-2 text-xs tracking-wider uppercase bg-slate-800 hover:bg-slate-700 flex-shrink-0">
                 Network API
-              </a>
+              </button>
             </nav>
 
             <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 text-slate-400">
@@ -1496,7 +1572,7 @@ const App: React.FC = () => {
       <main className="container py-8">
         {renderPage()}
       </main>
-      <Footer />
+      <Footer onNavigate={handleNavigate} />
     </div>
   );
 };

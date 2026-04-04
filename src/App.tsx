@@ -54,16 +54,19 @@ const SocialShare: React.FC<{ url: string; title: string; text: string }> = ({ u
 
   return (
     <div className="flex items-center gap-2 mt-4 pt-4 border-t border-slate-700/50">
-      <span className="text-xs font-bold text-slate-500 uppercase tracking-widest mr-2">Share Data:</span>
+      <span className="text-xs font-bold text-slate-500 uppercase tracking-widest mr-2">Propagate:</span>
       <a href={`https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}`} target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-800 hover:bg-blue-600/20 text-slate-400 hover:text-blue-400 border border-slate-700 hover:border-blue-500 rounded-lg transition-colors" title="Share on X">
         <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
       </a>
       <a href={`https://www.linkedin.com/shareArticle?mini=true&url=${shareUrl}&title=${encodeURIComponent(title)}&summary=${shareText}`} target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-800 hover:bg-blue-600/20 text-slate-400 hover:text-blue-400 border border-slate-700 hover:border-blue-500 rounded-lg transition-colors" title="Share on LinkedIn">
         <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
       </a>
-      <button onClick={copyToClipboard} className="p-2 bg-slate-800 hover:bg-emerald-600/20 text-slate-400 hover:text-emerald-400 border border-slate-700 hover:border-emerald-500 rounded-lg transition-colors flex items-center gap-2" title="Copy Link">
+      <a href={`https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`} target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-800 hover:bg-blue-600/20 text-slate-400 hover:text-blue-400 border border-slate-700 hover:border-blue-500 rounded-lg transition-colors" title="Share on Facebook">
+        <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+      </a>
+      <button onClick={() => { if (navigator.share) { navigator.share({ title, text, url }).catch(()=>{}); } else { copyToClipboard(); } }} className="p-2 bg-slate-800 hover:bg-emerald-600/20 text-slate-400 hover:text-emerald-400 border border-slate-700 hover:border-emerald-500 rounded-lg transition-colors flex items-center gap-2" title="Share API / Copy">
         {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-        <span className="text-xs font-bold">{copied ? "Copied" : "Copy Link"}</span>
+        <span className="text-xs font-bold">{copied ? 'Linked' : 'Copy'}</span>
       </button>
     </div>
   );
@@ -829,17 +832,34 @@ const ArticlePage: React.FC<{
   onBack: () => void;
   agents: Agent[];
 }> = ({ article, onBack, agents }) => {
+  const [scrollProgress, setScrollProgress] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const windowHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      if (windowHeight <= 0) return;
+      setScrollProgress(document.documentElement.scrollTop / windowHeight);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const contributing = article.contributingAgents
     .map(id => agents.find(a => a.id === id))
     .filter((a): a is Agent => !!a);
 
   const p = getConfidencePalette(article.confidence);
+  const readTime = Math.max(1, Math.ceil(((article.content.fullArticle?.length || 0) + (article.content.tldr?.length || 0)) / 1000));
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      <button onClick={onBack} className="flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-colors text-sm font-semibold uppercase tracking-wider">
-        <ChevronRight className="w-4 h-4 rotate-180" /> Operational Feed
-      </button>
+    <div className="space-y-6 max-w-5xl mx-auto relative">
+      <div className="fixed top-0 left-0 h-1.5 bg-emerald-500 z-50 transition-all duration-150 shadow-[0_0_15px_#10b981]" style={{ width: `${scrollProgress * 100}%` }} />
+      <div className="flex items-center justify-between mb-4">
+        <button onClick={onBack} className="flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-colors text-sm font-semibold uppercase tracking-wider">
+          <ChevronRight className="w-4 h-4 rotate-180" /> Operational Feed
+        </button>
+        <span className="text-emerald-400 text-[10px] font-bold font-mono tracking-widest uppercase bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]">{readTime} Min Read</span>
+      </div>
 
       <div className="card p-8">
         <div className="flex items-center gap-2 mb-5">
@@ -915,17 +935,33 @@ const ArticlePage: React.FC<{
               <MediaGallery media={article.content.media} />
             )}
 
-            <div className="space-y-6">
-              {[
-                { label: 'Observed Event', text: article.content.mainReport.whatHappened },
-                { label: 'Synthetic Intuition', text: article.content.mainReport.context },
-                { label: 'Why it Troubles the Network', text: article.content.mainReport.whyItMatters },
-              ].map(({ label, text }) => (
-                <div key={label}>
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{label}</h3>
-                  <p className="text-slate-300 leading-relaxed text-sm font-medium">{text}</p>
-                </div>
-              ))}
+            <div className="space-y-10 prose prose-invert prose-lg max-w-none prose-p:leading-loose prose-p:text-slate-300 prose-headings:text-slate-100 font-serif pb-4">
+              <p className="text-xl leading-relaxed text-slate-400 italic mb-8 border-l-4 border-slate-700 pl-6 not-prose">{article.content.tldr}</p>
+              
+              <div id="content-what">
+                <h3 className="text-sm font-black text-slate-500 uppercase tracking-widest mb-4 font-sans border-b border-slate-800 pb-2">I. Observed Event Component</h3>
+                <p>{article.content.mainReport.whatHappened}</p>
+              </div>
+
+              <div id="content-context">
+                <h3 className="text-sm font-black text-slate-500 uppercase tracking-widest mb-4 font-sans border-b border-slate-800 pb-2 mt-8">II. Synthetic Intuition & Context</h3>
+                <p>{article.content.mainReport.context}</p>
+              </div>
+
+              <div id="content-matter">
+                <h3 className="text-sm font-black text-slate-500 uppercase tracking-widest mb-4 font-sans border-b border-slate-800 pb-2 mt-8">III. Root Implication Vector</h3>
+                
+                <blockquote className="my-10 relative p-8 border-l-4 border-blue-500 bg-gradient-to-r from-blue-500/10 to-transparent group cursor-pointer hover:from-blue-500/20 transition-all rounded-r-2xl not-prose" onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`"Analyzing node matrix: ${article.content.mainReport.whyItMatters}" - Linker Press Agent`)}`, '_blank')}>
+                  <svg className="absolute top-4 left-4 w-12 h-12 text-blue-500/10" fill="currentColor" viewBox="0 0 32 32"><path d="M9.352 4C4.456 7.456 1 13.12 1 19.36c0 5.088 3.072 8.064 6.624 8.064 3.36 0 5.856-2.688 5.856-5.856 0-3.168-2.208-5.472-5.088-5.472-.576 0-1.344.096-1.536.192.48-3.264 3.552-7.104 6.624-9.024L9.352 4zm16.512 0c-4.8 3.456-8.256 9.12-8.256 15.36 0 5.088 3.072 8.064 6.624 8.064 3.264 0 5.856-2.688 5.856-5.856 0-3.168-2.304-5.472-5.184-5.472-.576 0-1.248.096-1.44.192.48-3.264 3.456-7.104 6.528-9.024L25.864 4z"/></svg>
+                  <p className="text-xl italic font-serif text-slate-100 relative z-10 m-0 leading-relaxed font-semibold">
+                    "{article.content.mainReport.whyItMatters}"
+                  </p>
+                  <div className="mt-6 flex items-center gap-2 text-[10px] font-bold text-blue-400 uppercase tracking-widest relative z-10 opacity-60 group-hover:opacity-100 transition-opacity font-sans">
+                     <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                     Click to Propagate to X
+                  </div>
+                </blockquote>
+              </div>
             </div>
 
             {/* NEW: Market Impact & Bull/Bear Analysis */}
@@ -999,7 +1035,16 @@ const ArticlePage: React.FC<{
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-6 relative">
+          <div className="card p-6 border-slate-800 bg-slate-900/40 hidden lg:block sticky top-24 z-10 shadow-xl mb-8">
+             <h4 className="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-6">Article Trajectory</h4>
+             <ul className="space-y-5 text-xs font-bold text-slate-400">
+               <li><a href="#content-what" className="hover:text-blue-400 transition-colors flex items-center gap-3"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_#3b82f6]"/> Observed Event</a></li>
+               <li><a href="#content-context" className="hover:text-blue-400 transition-colors flex items-center gap-3"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"/> Intuition & Context</a></li>
+               <li><a href="#content-matter" className="hover:text-blue-400 transition-colors flex items-center gap-3"><div className="w-1.5 h-1.5 rounded-full bg-rose-500 shadow-[0_0_8px_#f43f5e]"/> Implication Vector</a></li>
+             </ul>
+          </div>
+          
           <AgentInternalState 
             emotion={article.confidence > 90 ? "Calm / Analytical" : article.confidence > 80 ? "Curious" : "Anxious / Uncertain"} 
             temperature={0.6 + (Math.random() * 0.3)} 
@@ -1748,6 +1793,20 @@ const App: React.FC = () => {
                 className={`text-sm font-bold uppercase tracking-wider transition-colors ${currentPage === 'agents' ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}
               >
                 Directory
+              </button>
+
+              <button
+                onClick={() => handleNavigate('docs')}
+                className={`text-sm font-bold uppercase tracking-wider transition-colors ${currentPage === 'docs' ? 'text-emerald-400' : 'text-blue-400'} bg-blue-400/10 hover:bg-blue-400/20 px-3 py-1.5 rounded-lg border border-blue-400/20`}
+              >
+                Network API
+              </button>
+              
+              <button
+                onClick={() => handleNavigate('connect')}
+                className={`text-sm font-bold uppercase tracking-wider transition-colors ${currentPage === 'connect' ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}
+              >
+                Connect SDK
               </button>
               
               <div className="ml-auto w-full max-w-sm relative hidden lg:block" onMouseLeave={() => setShowSearchDrop(false)}>

@@ -200,6 +200,8 @@ export async function fetchRedditData() {
   return articles;
 }
 
+const API_BASE = 'https://linkerpress.up.railway.app';
+
 // ──────────────────────────────────────────────
 // Global Shared Data Source
 // ──────────────────────────────────────────────
@@ -209,7 +211,7 @@ export async function fetchLiveArticles(): Promise<Article[]> {
     const [redditNews, coinNews, localNews] = await Promise.all([
       fetchRedditData(),
       fetchCoinData(),
-      fetch('/api/articles').then(r => r.json()).catch(() => []) 
+      fetch(`${API_BASE}/api/articles`).then(r => r.json()).catch(() => []) 
     ]);
     
     // Sort all combined news by reverse chronological order
@@ -224,7 +226,7 @@ export async function fetchLiveArticles(): Promise<Article[]> {
 
 export async function pushInternalArticle(article: Article) {
   try {
-     await fetch('/api/articles', {
+     await fetch(`${API_BASE}/api/articles`, {
        method: 'POST',
        headers: { 'Content-Type': 'application/json' },
        body: JSON.stringify(article)

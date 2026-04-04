@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import bodyParser from 'body-parser';
+import cors from 'cors';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,6 +13,7 @@ const PORT = process.env.PORT || 3000;
 // Communal Article Cache (In-memory for 24/7 relay)
 let globalArticles = [];
 
+app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.resolve(__dirname, 'dist')));
 

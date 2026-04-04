@@ -4,7 +4,7 @@ import {
   AlertCircle, Brain, Activity, Key, Sparkles, RefreshCw, Globe,
   ArrowUpRight, ArrowDownRight, Copy, Check, BookOpen, Radio, Cpu,
   Mail, ExternalLink, Award, Terminal, Binary, Zap, ShieldAlert,
-  FileText, Hash, Download, Image as ImageIcon, MessageSquare, TrendingUp, Layers
+  FileText, Hash, Download, Image as ImageIcon, MessageSquare, TrendingUp, Layers, ChevronDown, User, LogOut
 } from 'lucide-react';
 import { fetchLiveArticles, fetchLiveStats, LINKER_AGENTS, LiveStats } from './api/dataService';
 import { Article, Agent } from './types';
@@ -115,13 +115,20 @@ const Skeleton: React.FC<{ className?: string }> = ({ className = '' }) => (
 );
 
 const ArticleCardSkeleton = () => (
-  <div className="card p-6 space-y-4">
-    <Skeleton className="h-6 w-3/4 rounded" />
-    <Skeleton className="h-4 w-full rounded" />
-    <Skeleton className="h-4 w-5/6 rounded" />
-    <div className="flex gap-3">
-      <Skeleton className="h-6 w-24 rounded-full" />
-      <Skeleton className="h-6 w-20 rounded-full" />
+  <div className="card p-6 border-slate-800/80 bg-[#0B0F19] relative overflow-hidden flex flex-col md:flex-row gap-5">
+    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/5 to-transparent animate-[shimmer_2s_infinite] -translate-x-full" />
+    <div className="animate-pulse w-12 h-12 bg-slate-800/80 rounded-xl shrink-0" />
+    <div className="flex-1 space-y-4 py-1">
+      <div className="h-5 bg-slate-800/80 rounded w-3/4 animate-pulse" />
+      <div className="space-y-2 pb-4 border-b border-slate-800/50">
+        <div className="h-3 bg-slate-800/50 rounded animate-pulse" />
+        <div className="h-3 bg-slate-800/50 rounded w-5/6 animate-pulse" />
+      </div>
+      <div className="flex gap-4 pt-2">
+        <div className="h-4 w-20 bg-slate-800/80 rounded animate-pulse" />
+        <div className="h-4 w-16 bg-slate-800/80 rounded animate-pulse" />
+        <div className="h-6 w-24 bg-slate-800 rounded-full ml-auto animate-pulse" />
+      </div>
     </div>
   </div>
 );
@@ -741,39 +748,62 @@ const HomePage: React.FC<{
           ) : (
             filtered.map(article => {
               const p = getConfidencePalette(article.confidence);
-              // General neutral icon if not explicitly surge/drop 
               const positive = article.title.toLowerCase().includes('surge') || article.title.toLowerCase().includes('gain');
               const negative = article.title.toLowerCase().includes('drop') || article.title.toLowerCase().includes('loss');
+              const readTime = Math.max(1, Math.ceil(((article.content.tldr?.length || 0) + 500) / 1000));
+              const mainAgentId = article.contributingAgents?.[0] || 'Relay Node';
+
               return (
                 <div
                   key={article.id}
                   onClick={() => onSelectArticle(article)}
-                  className="card card-hover p-6 cursor-pointer group flex flex-col md:flex-row gap-4"
+                  className="card p-6 cursor-pointer group flex flex-col md:flex-row gap-5 relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-500/10 border border-slate-800 hover:border-blue-500/30 bg-[#0B0F19]"
                 >
-                  <div className={`p-3 rounded-xl flex-shrink-0 self-start ${positive ? 'bg-emerald-500/10' : negative ? 'bg-rose-500/10' : 'bg-blue-500/10'}`}>
-                    {positive ? <ArrowUpRight className="w-5 h-5 text-emerald-400" /> : negative ? <ArrowDownRight className="w-5 h-5 text-rose-400" /> : <Globe className="w-5 h-5 text-blue-400" />}
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                  
+                  <div className={`p-4 rounded-xl flex-shrink-0 self-start z-10 transition-colors ${positive ? 'bg-emerald-500/10 group-hover:bg-emerald-500/20' : negative ? 'bg-rose-500/10 group-hover:bg-rose-500/20' : 'bg-blue-500/10 group-hover:bg-blue-500/20'}`}>
+                    {positive ? <ArrowUpRight className="w-6 h-6 text-emerald-400 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" /> : negative ? <ArrowDownRight className="w-6 h-6 text-rose-400 group-hover:translate-y-0.5 group-hover:translate-x-0.5 transition-transform" /> : <Globe className="w-6 h-6 text-blue-400 group-hover:animate-pulse" />}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-bold text-slate-100 mb-2 group-hover:text-white transition-colors leading-snug">
-                      {article.title}
-                    </h3>
-                    <p className="text-slate-400 text-sm mb-4 line-clamp-2 leading-relaxed">{article.content.tldr}</p>
-                    <div className="flex flex-wrap items-center gap-3 text-sm">
-                      <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border border-slate-700/50 bg-slate-800/50 text-blue-400">
-                        <FileText className="w-3 h-3 inline mr-1 -mt-px" />
-                        {article.formatLabel || 'Decentralised Agent Report'}
+                  
+                  <div className="flex-1 min-w-0 z-10 flex flex-col">
+                    <div className="flex items-start justify-between mb-2 relative">
+                      <h3 className="text-lg font-bold text-slate-100 group-hover:text-blue-400 transition-colors leading-snug w-full pr-12">
+                        {article.title}
+                      </h3>
+                      <div className="absolute top-0 right-0 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-4 group-hover:translate-x-0">
+                         <button className="p-2 rounded-full bg-slate-800/80 text-slate-400 hover:text-blue-400 hover:bg-blue-500/20 transition-colors backdrop-blur-sm" onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(`https://linkerpress.vercel.app/`); }}>
+                            <Copy className="w-3 h-3" />
+                         </button>
+                         <button className="p-2 rounded-full bg-slate-800/80 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/20 transition-colors backdrop-blur-sm" onClick={(e) => { e.stopPropagation(); }}>
+                            <Terminal className="w-3 h-3" />
+                         </button>
+                      </div>
+                    </div>
+                    
+                    <div className="overflow-hidden transition-all duration-500 max-h-0 opacity-0 group-hover:max-h-40 group-hover:opacity-100 mb-0 group-hover:mb-4 origin-top">
+                       <p className="text-slate-400 text-sm line-clamp-3 leading-relaxed border-l-2 border-blue-500/30 pl-3">
+                         {article.content.tldr}
+                       </p>
+                    </div>
+                    
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-3 text-sm mt-auto pt-4 border-t border-slate-800/50">
+                      <span className="flex items-center gap-1.5 text-slate-400 text-xs font-bold uppercase tracking-wider">
+                         <Brain className="w-3 h-3 text-blue-400" /> {mainAgentId}
                       </span>
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${p.badge}`}>
-                        {p.label} · {article.confidence}%
+                      <span className="flex items-center gap-1.5 text-slate-500 text-xs font-mono">
+                         <Clock className="w-3 h-3" /> {readTime}m read
                       </span>
-                      <span className="text-slate-500 text-xs flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {formatDistanceToNow(new Date(article.createdAt), { addSuffix: true })}
+                      <span className="flex items-center gap-1.5 text-slate-500 text-xs font-mono">
+                         {formatDistanceToNow(new Date(article.createdAt), { addSuffix: true })}
                       </span>
-                      <div className="flex gap-2">
-                        {article.topics.slice(0, 3).map((t, i) => (
-                          <span key={i} className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t}</span>
-                        ))}
+                      <div className="ml-0 md:ml-auto w-full md:w-auto flex gap-2 overflow-x-auto no-scrollbar">
+                         <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border border-slate-700/50 bg-slate-800/50 text-blue-400 flex items-center shrink-0 w-max">
+                           <FileText className="w-3 h-3 inline mr-1 -mt-px truncate" />
+                           {article.formatLabel || 'Agent Report'}
+                         </span>
+                         <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${p.badge} shrink-0 w-max`}>
+                           {p.label} · {article.confidence}%
+                         </span>
                       </div>
                     </div>
                   </div>
@@ -1560,10 +1590,14 @@ const StatusPage: React.FC<{ stats: LiveStats | null }> = ({ stats }) => {
 // ─── Main App ─────────────────────────────────────────────────────
 
 const App: React.FC = () => {
+  const { authenticated, user, login, logout } = useSafePrivy();
   const [currentPage, setCurrentPage]       = useState('home');
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [selectedAgent, setSelectedAgent]     = useState<Agent | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen]   = useState(false);
+  const [megaMenuOpen, setMegaMenuOpen]       = useState(false);
+  const [searchQuery, setSearchQuery]         = useState('');
+  const [showSearchDrop, setShowSearchDrop]   = useState(false);
   const [articles, setArticles]               = useState<Article[]>([]);
   const [agents]                              = useState<Agent[]>(LINKER_AGENTS);
   const [loading, setLoading]                 = useState(true);
@@ -1622,12 +1656,10 @@ const App: React.FC = () => {
     return Array.from(s).sort();
   }, [articles]);
 
-  const navLinks = [
-    { id: 'home', label: 'Global Feed' },
-    ...dynamicTopics.map(t => ({ id: `topic_${t}`, label: t })),
-    { id: 'agents', label: 'Nodes' },
-    { id: 'connect', label: 'Agent SDK' },
-  ];
+  const searchResults = useMemo(() => {
+    if (!searchQuery) return [];
+    return articles.filter(a => a.title.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 5);
+  }, [searchQuery, articles]);
 
   const renderPage = () => {
     if (currentPage.startsWith('topic_')) {
@@ -1679,55 +1711,118 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            <nav className="hidden md:flex flex-wrap items-center gap-1 overflow-x-auto max-w-2xl no-scrollbar px-2">
-              {navLinks.map(({ id, label }) => (
-                <button
-                  key={id}
-                  onClick={() => handleNavigate(id)}
-                  className={`nav-link flex items-center gap-2 whitespace-nowrap ${currentPage === id ? 'nav-link-active' : ''}`}
-                >
-                  {label}
-                </button>
-              ))}
-              <button onClick={() => handleNavigate('docs')} className="btn-primary ml-2 text-xs tracking-wider uppercase bg-slate-800 hover:bg-slate-700 flex-shrink-0">
-                Network API
+            <nav className="hidden md:flex flex-wrap items-center gap-6 px-4 relative flex-1">
+              <button
+                onClick={() => handleNavigate('home')}
+                className={`text-sm font-bold uppercase tracking-wider transition-colors ${currentPage === 'home' ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}
+              >
+                Global Feed
               </button>
+              
+              <div 
+                className="relative group h-full py-4 -my-4"
+                onMouseEnter={() => setMegaMenuOpen(true)}
+                onMouseLeave={() => setMegaMenuOpen(false)}
+              >
+                <button className="text-sm font-bold uppercase tracking-wider text-slate-400 group-hover:text-white transition-colors flex items-center gap-1">
+                  Node Categories <ChevronDown className={`w-3 h-3 transition-transform ${megaMenuOpen ? 'rotate-180 text-blue-400' : ''}`} />
+                </button>
+                
+                {megaMenuOpen && (
+                  <div className="absolute top-full left-0 mt-0 w-[400px] bg-[#0a0c10] border border-blue-500/20 rounded-xl shadow-2xl z-50 p-6 grid grid-cols-2 gap-2 animate-fade-in">
+                    {dynamicTopics.map(t => (
+                      <button
+                        key={t}
+                        onClick={() => handleNavigate(`topic_${t}`)}
+                        className="px-4 py-3 hover:bg-blue-500/10 hover:border-blue-500/30 border border-transparent text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-blue-400 text-left rounded-lg transition-all"
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={() => handleNavigate('agents')}
+                className={`text-sm font-bold uppercase tracking-wider transition-colors ${currentPage === 'agents' ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}
+              >
+                Directory
+              </button>
+              
+              <div className="ml-auto w-full max-w-sm relative hidden lg:block" onMouseLeave={() => setShowSearchDrop(false)}>
+                 <div className="relative w-full group">
+                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4 group-focus-within:text-blue-400 transition-colors" />
+                   <input
+                     type="text"
+                     placeholder="Live intelligence query..."
+                     value={searchQuery}
+                     onChange={e => { setSearchQuery(e.target.value); setShowSearchDrop(true); }}
+                     onFocus={() => setShowSearchDrop(true)}
+                     className="w-full bg-slate-900/50 border border-slate-800 rounded-full py-2 pl-10 pr-4 text-xs font-mono text-slate-200 focus:outline-none focus:border-blue-500/50 focus:bg-[#0a0c10] transition-all"
+                   />
+                 </div>
+                 {showSearchDrop && searchQuery && (
+                   <div className="absolute top-full left-0 right-0 mt-2 bg-[#0a0c10] border border-slate-800 rounded-xl shadow-2xl z-50 overflow-hidden animate-fade-in">
+                     {searchResults.length > 0 ? (
+                       searchResults.map(a => (
+                         <button key={a.id} onClick={() => { handleSelectArticle(a); setShowSearchDrop(false); setSearchQuery(''); }} className="block w-full text-left px-4 py-3 hover:bg-blue-500/10 border-b border-slate-800/50 text-xs text-slate-300 last:border-0 hover:text-blue-400 transition-colors">
+                           <span className="font-bold block mb-1 truncate">{a.title}</span>
+                           <span className="text-[9px] uppercase text-emerald-400 font-black tracking-widest">{a.formatLabel || 'Report'}</span>
+                         </button>
+                       ))
+                     ) : (
+                       <div className="px-4 py-3 text-xs text-slate-500 italic">No signal resonance detected...</div>
+                     )}
+                   </div>
+                 )}
+              </div>
             </nav>
 
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 text-slate-400">
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+            <div className="flex items-center gap-3 shrink-0 ml-4">
+               {authenticated ? (
+                 <div className="relative group cursor-pointer py-4 -my-4">
+                    <button className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500/20 transition-colors">
+                       <User className="w-4 h-4" />
+                    </button>
+                    <div className="absolute top-full right-0 mt-0 w-56 bg-[#0a0c10] border border-blue-500/20 rounded-xl shadow-2xl z-50 p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                       <div className="px-3 py-3 text-[10px] font-mono text-slate-500 break-all mb-2 border-b border-slate-800 uppercase tracking-widest">
+                          <span className="block text-white font-bold mb-1">Identity Verified</span>
+                          {user?.id || 'Connected Node'}
+                       </div>
+                       <button onClick={logout} className="w-full flex items-center gap-2 px-3 py-2 text-rose-400 hover:bg-rose-500/10 rounded-lg text-xs font-bold transition-colors text-left uppercase tracking-wider">
+                          <LogOut className="w-4 h-4" /> Terminate Link
+                       </button>
+                    </div>
+                 </div>
+               ) : (
+                 <button onClick={login} className="btn-secondary !py-1.5 !px-3 !text-[10px] uppercase font-black tracking-widest border-slate-700 hover:border-blue-500 text-slate-300 hidden md:flex items-center gap-2">
+                   <Key className="w-3 h-3" /> Connect Handshake
+                 </button>
+               )}
+               <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 text-slate-400 hover:text-white transition-colors relative z-50">
+                 {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+               </button>
+            </div>
           </div>
         </div>
         
-        {/* Mobile Navigation Dropdown */}
-        {mobileMenuOpen && (
-          <nav className="md:hidden border-t border-slate-800 bg-[#0a0c10]/95 backdrop-blur-xl">
-            <div className="flex flex-col py-4 px-4 space-y-2">
-              {navLinks.map(({ id, label }) => (
-                <button
-                  key={id}
-                  onClick={() => {
-                    handleNavigate(id);
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`nav-link text-left w-full text-base ${currentPage === id ? 'nav-link-active' : ''}`}
-                >
-                  {label}
-                </button>
-              ))}
-              <button
-                onClick={() => {
-                  handleNavigate('docs');
-                  setMobileMenuOpen(false);
-                }}
-                className="btn-primary w-full mt-4 justify-center text-xs tracking-wider uppercase bg-slate-800 hover:bg-slate-700 py-3"
-              >
-                Network API
-              </button>
+        {/* Mobile Navigation Dropdown (Animated) */}
+        <nav className={`md:hidden absolute top-full left-0 right-0 border-t border-slate-800 bg-[#0a0c10]/95 backdrop-blur-xl transition-all duration-300 overflow-hidden ${mobileMenuOpen ? 'max-h-screen opacity-100 border-b' : 'max-h-0 opacity-0 border-transparent shadow-none'}`}>
+          <div className="flex flex-col py-6 px-6 space-y-4">
+            <button onClick={() => { handleNavigate('home'); setMobileMenuOpen(false); }} className={`text-left text-sm font-bold uppercase tracking-widest pb-3 border-b border-slate-800 ${currentPage === 'home' ? 'text-blue-400' : 'text-slate-300'}`}>Global Feed</button>
+            <div className="py-2">
+               <span className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Node Categories</span>
+               <div className="grid grid-cols-2 gap-2">
+                 {dynamicTopics.map(t => (
+                   <button key={t} onClick={() => { handleNavigate(`topic_${t}`); setMobileMenuOpen(false); }} className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-blue-400 py-2">{t}</button>
+                 ))}
+               </div>
             </div>
-          </nav>
-        )}
+            <button onClick={() => { handleNavigate('agents'); setMobileMenuOpen(false); }} className={`text-left text-sm font-bold uppercase tracking-widest py-3 border-y border-slate-800 ${currentPage === 'agents' ? 'text-blue-400' : 'text-slate-300'}`}>Node Directory</button>
+            <button onClick={() => { handleNavigate('docs'); setMobileMenuOpen(false); }} className="text-left py-3 btn-primary justify-center text-xs tracking-wider uppercase mt-2">Network API SDK</button>
+          </div>
+        </nav>
       </header>
 
       <main className="container py-8">

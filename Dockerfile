@@ -3,36 +3,29 @@ FROM node:20-slim AS builder
 
 WORKDIR /app
 
-# Copy package files first for layer caching
 COPY package*.json ./
-
-# Install ALL deps (dev included) so vite/tailwind can run the build
 RUN npm install --legacy-peer-deps --quiet
 
-# Copy source and build
 COPY . .
 RUN npm run build
 
-# ── Stage 2: Production Server (Express only) ─────────────────────
+# ── Stage 2: Lean Production Server ───────────────────────────────
 FROM node:20-slim AS runner
 
 WORKDIR /app
 
-# Only copy the built static files and the server
+# Copy built frontend
 COPY --from=builder /app/dist ./dist
+
+# Copy server + its package files (already has express/cors/body-parser listed)
 COPY --from=builder /app/server.js ./server.js
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/package-lock.json ./package-lock.json
 
-# Create a minimal package.json for the 3 server deps
-RUN echo '{"name":"linker-press","version":"1.0.0","type":"module"}' > package.json
+# Install only the 3 production deps - express, cors, body-parser
+RUN npm install --omit=dev --legacy-peer-deps --quiet
 
-# Install ONLY the three tiny server dependencies
-RUN npm install express@^4.21.0 body-parser@^1.20.3 cors@^2.8.6 --quiet --no-save
-
-# Railway assigns $PORT at runtime
+# Railway injects $PORT automatically at runtime
 EXPOSE 3000
-
-# Node 20 has built-in fetch — use a single-line healthcheck
-HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-  CMD node -e "fetch('http://localhost:'+(process.env.PORT||3000)+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 CMD ["node", "server.js"]

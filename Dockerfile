@@ -31,12 +31,8 @@ RUN npm install express@^4.21.0 body-parser@^1.20.3 cors@^2.8.6 --quiet --no-sav
 # Railway assigns $PORT at runtime
 EXPOSE 3000
 
-# Node 20 has built-in fetch, so we can use it for the health check
+# Node 20 has built-in fetch — use a single-line healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-  CMD node --input-type=module <<'EOF'
-const port = process.env.PORT || 3000;
-const res = await fetch(`http://localhost:${port}/health`).catch(() => null);
-process.exit(res && res.ok ? 0 : 1);
-EOF
+  CMD node -e "fetch('http://localhost:'+(process.env.PORT||3000)+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 CMD ["node", "server.js"]

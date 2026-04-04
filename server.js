@@ -8,16 +8,19 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.PORT || '3000', 10);
 
-// Communal Article Cache (In-memory for 24/7 relay)
+// In-memory communal relay cache (shared across all users per process lifetime)
 let globalArticles = [];
 
-app.use(cors());
-app.use(bodyParser.json());
-app.use(express.static(path.resolve(__dirname, 'dist')));
+app.use(cors({ origin: '*' }));
+app.use(bodyParser.json({ limit: '2mb' }));
+app.use(express.static(path.resolve(__dirname, 'dist'), {
+  maxAge: '1h',
+  etag: true
+}));
 
-// ── API ENDPOINTS (Communal Relay) ───────────────────────────────
+// ── API: Communal Article Relay ───────────────────────────────────
 
 app.get('/api/articles', (req, res) => {
   res.json(globalArticles);
@@ -25,32 +28,47 @@ app.get('/api/articles', (req, res) => {
 
 app.post('/api/articles', (req, res) => {
   const newArticle = req.body;
-  globalArticles.push(newArticle);
-  if (globalArticles.length > 100) globalArticles.shift();
-  res.status(201).json({ success: true });
+  if (!newArticle || !newArticle.id) {
+    return res.status(400).json({ error: 'Invalid article payload' });
+  }
+  // Deduplicate by id
+  const exists = globalArticles.find(a => a.id === newArticle.id);
+  if (!exists) {
+    globalArticles.unshift(newArticle);
+    if (globalArticles.length > 200) globalArticles.pop();
+  }
+  res.status(201).json({ success: true, total: globalArticles.length });
 });
 
-// Health check for Railway
-app.get('/health', (req, res) => res.status(200).send('OK'));
+// ── Health check (Railway pings this) ────────────────────────────
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    uptime: process.uptime().toFixed(1) + 's',
+    articles: globalArticles.length,
+    port: PORT
+  });
+});
 
-// ──────────────────────────────────────────────────────────────────
-
+// ── SPA fallback: serve index.html for all non-API routes ─────────
 app.get('*', (req, res) => {
   const indexPath = path.resolve(__dirname, 'dist', 'index.html');
   res.sendFile(indexPath, (err) => {
     if (err) {
-      console.error(`Error sending index.html: ${err.message}`);
-      res.status(500).send("Core UI not initialized. Check build logs.");
+      console.error(`[ERROR] Could not serve index.html: ${err.message}`);
+      res.status(500).send('Server error. Check deployment logs.');
     }
   });
 });
 
-// IMPORTANT: Listen on 0.0.0.0 on the Railway-assigned PORT
+// ── Start listening ───────────────────────────────────────────────
 const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`[SERVICE] Linker Press Relay UP on 0.0.0.0:${PORT}`);
-  console.log(`[INFO] Serving static files from: ${path.resolve(__dirname, 'dist')}`);
+  console.log(`[LINKER PRESS] Server live on 0.0.0.0:${PORT}`);
+  console.log(`[LINKER PRESS] Serving dist from: ${path.resolve(__dirname, 'dist')}`);
+  console.log(`[LINKER PRESS] Health check: http://0.0.0.0:${PORT}/health`);
 });
 
 server.on('error', (err) => {
-  console.error(`[CRITICAL] Server failed to start: ${err.message}`);
+  console.error(`[CRITICAL] Server startup failure: ${err.message}`);
+  process.exit(1);
 });

@@ -1,29 +1,42 @@
-# Stage 1: Build the React Application
-FROM node:22-slim AS build-stage
+# ── Stage 1: Build the React App ──────────────────────────────────
+FROM node:20-slim AS builder
 
 WORKDIR /app
 
-# Copy package files first for better caching
+# Copy package files first for layer caching
 COPY package*.json ./
+
+# Install ALL deps (dev included) so vite/tailwind can run the build
 RUN npm install --legacy-peer-deps --quiet
 
-# Copy the rest of the source
+# Copy source and build
 COPY . .
-
 RUN npm run build
 
-# Stage 2: Serve with Express
-FROM node:22-slim AS production-stage
+# ── Stage 2: Production Server (Express only) ─────────────────────
+FROM node:20-slim AS runner
 
 WORKDIR /app
 
-# Copy only the necessary files from the build stage
-COPY --from=build-stage /app/dist ./dist
-COPY --from=build-stage /app/server.js ./server.js
-COPY --from=build-stage /app/package*.json ./
+# Only copy the built static files and the server
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/server.js ./server.js
 
-# Install ONLY production dependencies (Express, Body-parser)
-RUN npm install --only=production --legacy-peer-deps --quiet
+# Create a minimal package.json for the 3 server deps
+RUN echo '{"name":"linker-press","version":"1.0.0","type":"module"}' > package.json
 
-# Start the communal news relay
+# Install ONLY the three tiny server dependencies
+RUN npm install express@^4.21.0 body-parser@^1.20.3 cors@^2.8.6 --quiet --no-save
+
+# Railway assigns $PORT at runtime
+EXPOSE 3000
+
+# Node 20 has built-in fetch, so we can use it for the health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+  CMD node --input-type=module <<'EOF'
+const port = process.env.PORT || 3000;
+const res = await fetch(`http://localhost:${port}/health`).catch(() => null);
+process.exit(res && res.ok ? 0 : 1);
+EOF
+
 CMD ["node", "server.js"]

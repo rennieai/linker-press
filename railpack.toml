@@ -1,0 +1,9 @@
+[phases.install]
+cmds = ["npm install"]
+
+[phases.build]
+cmds = ["npm run build"]
+dependsOn = ["install"]
+
+[deploy]
+startCmd = "npx serve dist"
